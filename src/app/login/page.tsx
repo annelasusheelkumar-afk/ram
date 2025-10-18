@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
 
 export default function LoginPage() {
@@ -24,8 +25,9 @@ export default function LoginPage() {
   const handleAnonymousSignIn = async () => {
     setIsLoading(true);
     try {
-      await firebaseSignInAnonymously(auth);
-      toast({ title: 'Signed in anonymously.' });
+      // Non-blocking call
+      initiateAnonymousSignIn(auth);
+      toast({ title: 'Signing in as guest...' });
       router.push('/');
     } catch (error: any) {
       toast({
@@ -33,9 +35,10 @@ export default function LoginPage() {
         title: 'Anonymous sign-in failed',
         description: error.message,
       });
-    } finally {
       setIsLoading(false);
     }
+    // No need for a finally block to set isLoading to false, 
+    // as the user is immediately navigated away.
   };
 
   return (
@@ -53,7 +56,7 @@ export default function LoginPage() {
             onClick={handleAnonymousSignIn}
             disabled={isLoading}
           >
-            {isLoading ? 'Signing In...' : 'Continue as Guest'}
+            {isLoading ? 'Redirecting...' : 'Continue as Guest'}
           </Button>
         </CardContent>
         <CardFooter>
