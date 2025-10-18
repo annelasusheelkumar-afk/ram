@@ -1,8 +1,5 @@
 'use server';
 
-import { getApp } from 'firebase-admin/app';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import { initializeFirebase } from '@/firebase';
 import { 
   initiateEmailSignUp, 
   initiateEmailSignIn,
@@ -10,17 +7,15 @@ import {
 } from '@/firebase/non-blocking-login';
 import { getAuth, signOut as clientSignOut } from 'firebase/auth';
 
-const app = getApp();
-const adminAuth = getAdminAuth(app);
-
 // Server actions for authentication
 // Note: We use the non-blocking functions to initiate auth changes on the client.
 // The actual state change is handled by the onAuthStateChanged listener in the FirebaseProvider.
 
 export async function signUpWithEmail(email: string, password: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // We can use the admin SDK to create the user, which is more secure
-    await adminAuth.createUser({ email, password });
+    // This action simply signals the client to attempt sign-up.
+    // We are not actually performing the sign up on the server.
+    // The client-side firebase SDK will handle it.
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
