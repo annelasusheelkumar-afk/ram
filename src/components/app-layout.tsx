@@ -26,8 +26,21 @@ import type { UserProfile } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 
 function AppContent({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
   const { userProfile } = useAuthDependentData();
   const { toast } = useToast();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (
+      !isUserLoading &&
+      !user &&
+      !['/login', '/signup', '/forgot-password'].includes(pathname)
+    ) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router, pathname]);
 
   const handleShare = async () => {
     const shareData = {
@@ -61,10 +74,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const pathname = usePathname();
-
   return (
-    <>
+    <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-center">
@@ -144,7 +155,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
             {children}
         </main>
       </SidebarInset>
-    </>
+    </SidebarProvider>
   );
 }
 
@@ -162,50 +173,36 @@ function useAuthDependentData() {
     return { userProfile };
 }
 
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
+  const { isUserLoading } = useUser();
 
-  React.useEffect(() => {
-    if (
-      !isUserLoading &&
-      !user &&
-      !['/login', '/signup', '/forgot-password'].includes(pathname)
-    ) {
-      router.replace('/login');
-    }
-  }, [user, isUserLoading, router, pathname]);
+  const isAuthPage = ['/login', '/signup', '/forgot-password', '/loading'].includes(pathname);
 
-  const showLoadingSkeleton = isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname));
-
-  if (['/login', '/signup', '/forgot-password', '/loading'].includes(pathname)) {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
-  return (
-      <SidebarProvider>
-        {showLoadingSkeleton ? (
-             <div className="flex h-screen w-full bg-background">
-                <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
-                    <div className='p-2'><Skeleton className="h-8 w-3/4" /></div>
-                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-                </div>
-                <div className="flex-1">
-                    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
-                        <Skeleton className="h-9 w-9 rounded-full" />
-                    </header>
-                    <main className="p-8">
-                        <Skeleton className="h-96 w-full" />
-                    </main>
-                </div>
-            </div>
-        ) : (
-          <AppContent>{children}</AppContent>
-        )}
-      </SidebarProvider>
-  );
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full bg-background">
+         <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
+             <div className='p-2'><Skeleton className="h-8 w-3/4" /></div>
+             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+         </div>
+         <div className="flex-1">
+             <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
+                 <Skeleton className="h-9 w-9 rounded-full" />
+             </header>
+             <main className="p-8">
+                 <Skeleton className="h-96 w-full" />
+             </main>
+         </div>
+     </div>
+    );
+  }
+
+  return <AppContent>{children}</AppContent>;
 }
