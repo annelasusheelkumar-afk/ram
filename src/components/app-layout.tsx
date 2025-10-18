@@ -41,8 +41,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   React.useEffect(() => {
-    // If auth state is resolved and there's no user, redirect to login.
-    // Allow access to login, signup, and forgot-password pages.
     if (
       !isUserLoading &&
       !user &&
@@ -63,8 +61,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         await navigator.share(shareData);
       } catch (err: any) {
-        // Silently ignore AbortError (user cancellation) and other permission errors.
-        // Log others for debugging, but don't crash.
         if (err.name !== 'AbortError') {
           console.log('Could not share:', err);
         }
@@ -86,9 +82,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // While checking auth, show a loading skeleton.
-  // Or if there's no user and we're not on an auth page, we're about to redirect,
-  // so show loading to prevent flashing content.
   if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
       return (
         <div className="flex h-screen w-full">
@@ -110,8 +103,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       );
   }
 
-  // If on login/signup, render children without the main app layout
-  if (['/login', '/signup', '/forgot-password'].includes(pathname)) {
+  if (['/login', '/signup', '/forgot-password', '/loading'].includes(pathname)) {
     return <>{children}</>;
   }
 
