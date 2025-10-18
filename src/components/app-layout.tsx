@@ -91,6 +91,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // so show loading to prevent flashing content.
   if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
       return (
+        <SidebarProvider>
           <div className="flex h-screen w-full">
             <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-muted/40 w-64">
                 <Skeleton className="h-12 w-full" />
@@ -107,6 +108,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </main>
             </div>
           </div>
+        </SidebarProvider>
       );
   }
 
