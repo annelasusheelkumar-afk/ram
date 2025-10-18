@@ -13,7 +13,7 @@ import {
   SidebarProvider,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { MessageSquare, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
 
@@ -31,18 +31,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/inquiries')}
-                tooltip="Inquiries"
-              >
-                <Link href="/inquiries">
-                  <MessageSquare />
-                  <span>Inquiries</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild

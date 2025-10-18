@@ -1,5 +1,5 @@
-import InquiriesPage from './inquiries/page';
+import DashboardPage from './dashboard/page';
 
 export default function Home() {
-  return <InquiriesPage />;
+  return <DashboardPage />;
 }

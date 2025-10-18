@@ -43,89 +43,6 @@
         "username",
         "email"
       ]
-    },
-    "Inquiry": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Inquiry",
-      "type": "object",
-      "description": "Represents a single customer service inquiry or conversation.",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "description": "The ID of the user who initiated the inquiry."
-        },
-        "customerName": {
-          "type": "string",
-          "description": "The name of the customer for the inquiry."
-        },
-        "status": {
-          "type": "string",
-          "enum": [
-            "open",
-            "resolved"
-          ],
-          "description": "The current status of the inquiry."
-        },
-        "lastMessage": {
-          "type": "string",
-          "description": "A snippet of the last message in the inquiry."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when the inquiry was created."
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when the inquiry was last updated."
-        }
-      },
-      "required": [
-        "userId",
-        "status",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "Message": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Message",
-      "type": "object",
-      "description": "Represents a single message within a customer service inquiry.",
-      "properties": {
-        "role": {
-          "type": "string",
-          "enum": [
-            "user",
-            "assistant"
-          ],
-          "description": "Who sent the message."
-        },
-        "content": {
-          "type": "string",
-          "description": "The text content of the message."
-        },
-        "sentiment": {
-          "type": "string",
-          "enum": [
-            "positive",
-            "negative",
-            "neutral"
-          ],
-          "description": "The analyzed sentiment of the message."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when the message was sent."
-        }
-      },
-      "required": [
-        "role",
-        "content",
-        "createdAt"
-      ]
     }
   },
   "auth": {
@@ -140,18 +57,6 @@
         "$ref": "#/entities/User"
       },
       "description": "Stores public-facing user profile information. The document ID is the same as the Firebase Auth user UID."
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": {
-        "$ref": "#/entities/Inquiry"
-      },
-      "description": "Top-level collection for all customer service inquiries."
-    },
-    "/inquiries/{inquiryId}/messages/{messageId}": {
-      "schema": {
-        "$ref": "#/entities/Message"
-      },
-      "description": "Sub-collection storing all messages for a specific inquiry."
     }
   }
 }
