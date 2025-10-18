@@ -12,14 +12,48 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarInset,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, MessageCircle, List } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, List, Share2 } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
 import NotificationPermissionManager from './NotificationPermissionManager';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'ServAI',
+      text: 'Check out this AI-driven customer service solution!',
+      url: window.location.origin,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback for browsers that do not support Web Share API
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: 'Link Copied!',
+          description: 'App URL has been copied to your clipboard.',
+        });
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to copy link',
+        });
+      }
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -70,6 +104,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleShare} tooltip="Share App">
+                        <Share2 />
+                        <span>Share App</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <NotificationPermissionManager />
