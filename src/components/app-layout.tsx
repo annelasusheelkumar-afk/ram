@@ -41,7 +41,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router, pathname]);
-  
+
   const handleShare = async () => {
     const shareData = {
       title: 'ServAI',
@@ -73,8 +73,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
         }
     }
   };
-
-  if (isUserLoading) {
+  
+  if (isUserLoading || !user) {
      return (
        <div className="flex h-screen w-full bg-background">
           <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
@@ -94,6 +94,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
 
   return (
     <SidebarProvider>
