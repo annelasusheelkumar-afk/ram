@@ -16,6 +16,7 @@ import {
 import { LayoutDashboard, MessageCircle, List } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
+import NotificationPermissionManager from './NotificationPermissionManager';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -71,6 +72,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
+        <NotificationPermissionManager />
         <AppHeader />
         <main className="h-[calc(100vh-3.5rem)]">
             {children}

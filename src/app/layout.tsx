@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppLayout from '@/components/app-layout';
 import { FirebaseClientProvider } from '@/firebase';
+import ServiceWorkerRegistrar from '@/components/service-worker-registrar';
 
 export const metadata: Metadata = {
   title: 'ServAI',
@@ -29,6 +30,7 @@ export default function RootLayout({
           </AppLayout>
         </FirebaseClientProvider>
         <Toaster />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );
