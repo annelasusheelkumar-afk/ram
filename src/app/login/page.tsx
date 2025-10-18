@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import {
   initiateAnonymousSignIn,
   initiateEmailSignIn,
@@ -25,28 +24,36 @@ import { Separator } from '@/components/ui/separator';
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGuestLoading, setIsGuestLoading] = useState(false);
 
+  useEffect(() => {
+    // If the user is successfully authenticated (and not loading), redirect them.
+    if (!isUserLoading && user) {
+      router.push('/loading');
+    }
+    // If auth state is resolved and there's no user, stop loading indicators.
+    if (!isUserLoading && !user) {
+        setIsLoading(false);
+        setIsGuestLoading(false);
+    }
+  }, [user, isUserLoading, router]);
+
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Non-blocking call. We initiate the sign-in and immediately redirect.
-    // The non-blocking-login function now handles its own errors with toasts.
+    // This non-blocking function will attempt sign-in and show a toast on error.
+    // The useEffect hook above will handle the redirect on success.
     initiateEmailSignIn(auth, email, password);
-    // We redirect optimistically. The onAuthStateChanged listener will handle
-    // the UI state once authentication completes or fails. If it fails,
-    // the user will be brought back to the login screen by the auth listener logic.
-    router.push('/loading');
   };
 
   const handleAnonymousSignIn = async () => {
     setIsGuestLoading(true);
-    // Non-blocking call, same as above.
+    // Same as above, useEffect will handle the redirect on successful anonymous login.
     initiateAnonymousSignIn(auth);
-    router.push('/loading');
   };
 
   return (
