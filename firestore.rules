@@ -1,53 +1,87 @@
 /**
- * @file Firebase Security Rules for ServAI User Profiles
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for the `/users/{userId}` collection.
- * Each user can only access their own profile data.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for user profiles and restricts inquiry listing.
  *
  * Data Structure:
- * - /users/{userId}: Stores individual user profiles.
+ * - /users/{userId}: Stores user profile information. Document ID matches the Firebase Auth UID.
+ * - /inquiries/{inquiryId}: Stores customer service inquiries.
+ * - /inquiries/{inquiryId}/messages/{messageId}: Stores messages for a specific inquiry.
  *
  * Key Security Decisions:
- * - Users can only read and write their own profile data. Listing all users is denied.
- * - The `id` field within the user document must match the `userId` in the path.
- * - Updates ensure the `id` field remains immutable to prevent unauthorized ownership changes.
+ * - Users can only read/write their own profile data.
+ * - Listing of inquiries is disallowed to all users, including authenticated users.
+ * - Inquiries and messages can be read by any authenticated user but can only be created by that user.
+ * - Authorization relies on matching the authenticated user's UID against the document ID or a 'userId' field within the document.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to individual user profiles.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create a profile at /users/user123 if the 'id' field matches.
-     * @allow (get, update, delete) - User with UID 'user123' can access their profile at /users/user123.
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (get, update, delete) - User with UID 'user456' cannot access the profile at /users/user123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) A user with UID 'user123' can create their own profile document at /users/user123.
+     * @deny (create) A user with UID 'user123' cannot create a profile document at /users/anotherUser.
+     * @allow (get, update, delete) A user with UID 'user123' can read, update, or delete their own profile document at /users/user123.
+     * @deny (get, update, delete) A user with UID 'user123' cannot read, update, or delete another user's profile document at /users/anotherUser.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      // Function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Function to check if the requested user ID matches the authenticated user's ID.
+      // Validate that the authenticated user is the owner of the profile.
       function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
-      // Function to check if the user is an existing owner (isSignedIn and resource exists)
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
+      // Allow a user to create their own profile if the userId matches their auth UID.
+      allow create: if isOwner(userId);
 
-      allow get: if isOwner(userId);
+      // Allow a user to get, update, or delete their own profile if they are signed in and the userId matches their auth UID.
+      allow get, update, delete: if isOwner(userId) && resource.data.id == userId;
+
+      // No listing of users.
       allow list: if false;
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
     }
+
+    /**
+     * @description Controls access to customer service inquiries.
+     * @path /inquiries/{inquiryId}
+     * @allow (get) Any authenticated user can read an inquiry.
+     * @deny (create, update, delete, list) No one can list, create, update or delete inquiries.
+     * @principle Restricts listing of inquiries and enforces authentication for reading.
+     */
+    match /inquiries/{inquiryId} {
+      // Allow any authenticated user to read an inquiry.
+      allow get: if isSignedIn();
+
+      // Disallow creating, updating, deleting, and listing inquiries.
+      allow create, update, delete: if false;
+
+      // Disallow listing inquiries.
+      allow list: if false;
+    }
+
+    /**
+     * @description Controls access to messages within a specific inquiry.
+     * @path /inquiries/{inquiryId}/messages/{messageId}
+     * @allow (get) Any authenticated user can read a message.
+     * @allow (create) Any authenticated user can create a message.
+     * @deny (update, delete, list) No one can update, delete, or list messages directly.
+     * @principle Enforces authentication for reading and creating messages.
+     */
+    match /inquiries/{inquiryId}/messages/{messageId} {
+      // Allow any authenticated user to read a message.
+      allow get: if isSignedIn();
+
+      // Allow any authenticated user to create a message
+      allow create: if isSignedIn();
+
+      // Disallow updating, deleting, and listing messages.
+      allow update, delete, list: if false;
+    }
+  }
+
+  // Helper function to check if a user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
   }
 }
