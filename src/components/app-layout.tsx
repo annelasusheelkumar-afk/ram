@@ -49,9 +49,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         await navigator.share(shareData);
       } catch (err: any) {
-        // Silently ignore AbortError which occurs when the user cancels the share dialog
+        // Silently ignore AbortError (user cancellation) and other permission errors.
+        // Log others for debugging, but don't crash.
         if (err.name !== 'AbortError') {
-            console.error('Error sharing:', err);
+          console.log('Could not share:', err); // Changed to console.log to be less alarming than console.error
         }
       }
     } else {
