@@ -27,7 +27,7 @@ import { Skeleton } from './ui/skeleton';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
-  const { userProfile } = useAuthDependentData();
+  const { userProfile, isProfileLoading } = useAuthDependentData();
   const { toast } = useToast();
   const pathname = usePathname();
   const router = useRouter();
@@ -73,6 +73,27 @@ function AppContent({ children }: { children: React.ReactNode }) {
       }
     }
   };
+
+  if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
+     return (
+       <div className="flex h-screen w-full bg-background">
+          <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
+              <div className='p-2'><Skeleton className="h-8 w-3/4" /></div>
+              <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+              <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+              <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+          </div>
+          <div className="flex-1">
+              <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
+                  <Skeleton className="h-9 w-9 rounded-full" />
+              </header>
+              <main className="p-8">
+                  <Skeleton className="h-96 w-full" />
+              </main>
+          </div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -121,7 +142,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             {userProfile?.role === 'admin' && (
+             {(isProfileLoading) ? (
+                <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+             ) : userProfile?.role === 'admin' && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -168,40 +191,18 @@ function useAuthDependentData() {
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
 
-    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
-    return { userProfile };
+    return { userProfile, isProfileLoading };
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isUserLoading } = useUser();
 
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/loading'].includes(pathname);
 
   if (isAuthPage) {
     return <>{children}</>;
-  }
-
-  if (isUserLoading) {
-    return (
-      <div className="flex h-screen w-full bg-background">
-         <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
-             <div className='p-2'><Skeleton className="h-8 w-3/4" /></div>
-             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-             <div className='p-2'><Skeleton className="h-8 w-full" /></div>
-         </div>
-         <div className="flex-1">
-             <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
-                 <Skeleton className="h-9 w-9 rounded-full" />
-             </header>
-             <main className="p-8">
-                 <Skeleton className="h-96 w-full" />
-             </main>
-         </div>
-     </div>
-    );
   }
 
   return <AppContent>{children}</AppContent>;
