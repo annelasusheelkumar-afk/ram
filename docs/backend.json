@@ -40,8 +40,105 @@
       },
       "required": [
         "id",
-        "username",
         "email"
+      ]
+    },
+    "Inquiry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Inquiry",
+      "type": "object",
+      "description": "Represents a single customer service inquiry or ticket.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the inquiry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who created the inquiry."
+        },
+        "title": {
+          "type": "string",
+          "description": "A brief title or summary of the inquiry."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "in_progress",
+            "resolved",
+            "closed"
+          ],
+          "description": "The current status of the inquiry."
+        },
+        "sentiment": {
+          "type": "string",
+          "enum": [
+            "positive",
+            "negative",
+            "neutral"
+          ],
+          "description": "The overall sentiment of the inquiry, determined by AI."
+        },
+        "sentimentScore": {
+          "type": "number",
+          "description": "A numerical score indicating the strength of the sentiment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the inquiry was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The date and time when the inquiry was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "status"
+      ]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a customer service inquiry chat log.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the message."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "The ID of the sender (can be a user or 'bot')."
+        },
+        "senderType": {
+          "type": "string",
+          "enum": [
+            "user",
+            "bot"
+          ],
+          "description": "The type of the sender."
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the message was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "senderId",
+        "senderType",
+        "content"
       ]
     }
   },
@@ -57,6 +154,18 @@
         "$ref": "#/entities/User"
       },
       "description": "Stores public-facing user profile information. The document ID is the same as the Firebase Auth user UID."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": {
+        "$ref": "#/entities/Inquiry"
+      },
+      "description": "Stores customer service inquiries. The documents are owned by users."
+    },
+    "/inquiries/{inquiryId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/Message"
+      },
+      "description": "Stores the chat log for a specific inquiry. Messages are sub-collections of inquiries."
     }
   }
 }
