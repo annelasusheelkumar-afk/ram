@@ -34,8 +34,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        console.error('Error sharing:', err);
+      } catch (err: any) {
+        // Silently ignore AbortError which occurs when the user cancels the share dialog
+        if (err.name !== 'AbortError') {
+            console.error('Error sharing:', err);
+        }
       }
     } else {
       // Fallback for browsers that do not support Web Share API
