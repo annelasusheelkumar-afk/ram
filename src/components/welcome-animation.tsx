@@ -65,7 +65,10 @@ const WelcomeAnimation = () => {
           {/* Head */}
           <rect x="30" y="10" width="40" height="30" rx="5" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="2"/>
           {/* Eye */}
-          <circle cx="50" cy="25" r="5" fill="hsl(var(--primary))" />
+          <circle cx="42" cy="25" r="3" fill="hsl(var(--primary))" />
+          <circle cx="58" cy="25" r="3" fill="hsl(var(--primary))" />
+           {/* Smile */}
+          <path d="M 40 32 Q 50 38 60 32" stroke="hsl(var(--primary))" fill="none" strokeWidth="2" strokeLinecap="round" />
           {/* Antenna */}
           <line x1="50" y1="10" x2="50" y2="5" stroke="hsl(var(--muted-foreground))" strokeWidth="2" />
           <circle cx="50" cy="3" r="2" fill="hsl(var(--primary))" />
