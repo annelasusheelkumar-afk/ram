@@ -1,5 +1,5 @@
-import DashboardPage from './dashboard/page';
+import ChatbotPage from './chatbot/page';
 
 export default function Home() {
-  return <DashboardPage />;
+  return <ChatbotPage />;
 }
