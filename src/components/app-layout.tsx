@@ -25,30 +25,9 @@ import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 
-
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { userProfile } = useAuthDependentData();
   const { toast } = useToast();
-  const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
-
-  const userProfileRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
-
-  React.useEffect(() => {
-    if (
-      !isUserLoading &&
-      !user &&
-      !['/login', '/signup', '/forgot-password'].includes(pathname)
-    ) {
-      router.replace('/login');
-    }
-  }, [user, isUserLoading, router, pathname]);
 
   const handleShare = async () => {
     const shareData = {
@@ -82,33 +61,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
-      return (
-        <div className="flex h-screen w-full">
-          <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-muted/40 w-64">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="flex-1">
-              <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background/80 px-4 backdrop-blur-sm">
-                  <Skeleton className="h-9 w-9 rounded-full" />
-              </header>
-              <main className="p-8">
-                   <Skeleton className="h-96 w-full" />
-              </main>
-          </div>
-        </div>
-      );
-  }
-
-  if (['/login', '/signup', '/forgot-password', '/loading'].includes(pathname)) {
-    return <>{children}</>;
-  }
+  const pathname = usePathname();
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-center">
@@ -188,6 +144,68 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
         </main>
       </SidebarInset>
-    </SidebarProvider>
+    </>
+  );
+}
+
+function useAuthDependentData() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userProfileRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+    return { userProfile };
+}
+
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  React.useEffect(() => {
+    if (
+      !isUserLoading &&
+      !user &&
+      !['/login', '/signup', '/forgot-password'].includes(pathname)
+    ) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router, pathname]);
+
+  const showLoadingSkeleton = isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname));
+
+  if (['/login', '/signup', '/forgot-password', '/loading'].includes(pathname)) {
+    return <>{children}</>;
+  }
+
+  return (
+      <SidebarProvider>
+        {showLoadingSkeleton ? (
+             <div className="flex h-screen w-full bg-background">
+                <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
+                    <div className='p-2'><Skeleton className="h-8 w-3/4" /></div>
+                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+                    <div className='p-2'><Skeleton className="h-8 w-full" /></div>
+                </div>
+                <div className="flex-1">
+                    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                    </header>
+                    <main className="p-8">
+                        <Skeleton className="h-96 w-full" />
+                    </main>
+                </div>
+            </div>
+        ) : (
+          <AppContent>{children}</AppContent>
+        )}
+      </SidebarProvider>
   );
 }
