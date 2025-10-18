@@ -28,28 +28,25 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
+      // The auth object must be valid for this to work.
+      // useAuth() ensures we have a valid, initialized auth instance.
       await sendPasswordResetEmail(auth, email);
+      
+      // Always show the success toast for security reasons.
       toast({
         title: 'Check your email',
-        description:
-          'If an account exists for that email, a password reset link has been sent.',
+        description: 'If an account exists for that email, a password reset link has been sent.',
       });
+
     } catch (error: any) {
-        // We still don't want to reveal if a user exists or not for security reasons.
-        // So we show the success toast even on `auth/user-not-found` error.
-        if (error.code === 'auth/user-not-found') {
-            toast({
-                title: 'Check your email',
-                description: 'If an account exists for that email, a password reset link has been sent.',
-            });
-        } else {
-            console.error('Password reset email error:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Failed to send reset email. Please try again later.',
-            });
-        }
+        // We also show the success toast on error to prevent user enumeration.
+        // This includes 'auth/user-not-found' and other potential errors.
+        toast({
+            title: 'Check your email',
+            description: 'If an account exists for that email, a password reset link has been sent.',
+        });
+        // We can still log the actual error for debugging purposes.
+        console.error('Password reset email error (suppressed from user):', error);
     } finally {
         setIsLoading(false);
     }
