@@ -49,6 +49,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   const [input, setInput] = useState('');
   const [isBotReplying, setIsBotReplying] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [showSparkles, setShowSparkles] = useState(false);
 
   const inquiryRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'inquiries', inquiryId) : null),
@@ -64,6 +65,19 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
     [inquiryRef]
   );
   const { data: messages } = useCollection<Message>(messagesQuery);
+  
+  const prevStatus = useRef<Inquiry['status']>();
+
+  useEffect(() => {
+    if (inquiry) {
+      if (prevStatus.current !== 'resolved' && inquiry.status === 'resolved') {
+        setShowSparkles(true);
+        const timer = setTimeout(() => setShowSparkles(false), 2000); // Animation duration
+        return () => clearTimeout(timer);
+      }
+      prevStatus.current = inquiry.status;
+    }
+  }, [inquiry]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -136,7 +150,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
             </Button>
             <div>
                 <CardTitle className="font-headline">{inquiry?.title}</CardTitle>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 relative">
                     <Badge
                         variant={
                         inquiry?.status === 'resolved' || inquiry?.status === 'closed'
@@ -146,6 +160,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
                     >
                         {inquiry?.status}
                     </Badge>
+                     {showSparkles && <div className="sparkle-container"><div className="sparkle" /></div>}
                 </div>
             </div>
          </div>

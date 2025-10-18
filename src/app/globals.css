@@ -91,3 +91,42 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .sparkle-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    pointer-events: none;
+  }
+
+  .sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    box-shadow: 
+      0 0 10px 2px hsl(var(--positive)),
+      20px 30px 4px 1px hsl(var(--accent)),
+      -30px 40px 6px 2px hsl(var(--chart-2)),
+      40px -20px 5px 1px hsl(var(--chart-4)),
+      -10px -30px 4px 0px hsl(var(--chart-3)),
+      50px 50px 7px 2px hsl(var(--primary)),
+      -40px -40px 5px 1px hsl(var(--chart-1));
+    animation: sparkle-burst 1s forwards;
+  }
+
+  @keyframes sparkle-burst {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+}
