@@ -1,111 +1,97 @@
 /**
- * @fileoverview Firestore Security Rules for ServAI customer service solution.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for inquiries and their messages.
- * Users can only create, read, update, and delete their own inquiries and messages.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profiles, with the document ID matching the Firebase Auth UID.
- * - /inquiries/{inquiryId}: Stores customer service inquiries. Each inquiry has a 'userId' field indicating ownership.
- * - /inquiries/{inquiryId}/messages/{messageId}: Stores chat messages for each inquiry. Each message also has a 'userId' field.
- *
- * Key Security Decisions:
- * - Users can only list inquiries that they own.
- * - Users can only list messages within inquiries that they own.
- * - Data shape is NOT strictly validated in this prototyping phase.
- *
- * Denormalization for Authorization:
- * The 'userId' field is present on both inquiries and messages, enabling direct ownership checks without additional reads.
+ * @description This ruleset enforces a strict user-ownership model for inquiries and messages,
+ *              while allowing public read access to inquiries. User profiles are private and
+ *              accessible only to the respective user.
+ * @dataStructure
+ *   - /users/{userId}: Stores public user profile information; only accessible by the user.
+ *   - /inquiries/{inquiryId}: Stores customer service inquiries, readable by all, but writable only by the owner.
+ *   - /inquiries/{inquiryId}/messages/{messageId}: Stores messages for an inquiry; only accessible by the inquiry owner.
+ * @keySecurityDecisions
+ *   - Users can only read and write their own profile data.
+ *   - Inquiries are publicly readable, but only the owner can create, update, or delete them.
+ *   - Messages are private and only accessible to the owner of the parent inquiry.
+ *   - Listing of users is disallowed.
+ * @denormalizationForAuthorization
+ *   - Inquiries include a `userId` field to denote ownership.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows users to manage their own profile information.
-     * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create their profile at /users/user123. The request.resource.data.id must equal request.auth.uid
-     * @allow (get, update, delete) - User with UID 'user123' can read/update/delete their profile at /users/user123.
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the profile at /users/user123.
-     * @principle Enforces document ownership for user profiles.
+     * @description Checks if the request is authenticated.
      */
-    match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if isSignedIn();
-      allow list: if false; // User listing is not permitted
-
-      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
-      allow update: if isOwner(userId) && resource.data.id == request.resource.data.id;
-      allow delete: if isOwner(userId) && resource != null;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     /**
-     * @description Allows users to manage their own inquiries.
+     * @description Checks if the authenticated user is the owner of the resource.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the existing owner of the resource.
+     *              Ensures that the resource exists before checking ownership.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Applies to user profile documents.
+     * @path /users/{userId}
+     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create their own profile.
+     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create a profile for another user.
+     * @allow (get, update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can read, update and delete their own profile.
+     * @deny (get, update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot read, update and delete another user's profile.
+     * @principle Enforces user-ownership for profile data.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.email is string && request.resource.data.email != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Applies to customer service inquiries.
      * @path /inquiries/{inquiryId}
-     * @allow (create) - User with UID 'user123' can create an inquiry with userId: 'user123'.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/list/update/delete their own inquiries (where inquiry.userId == 'user123').
-     * @deny (create) - User with UID 'user456' cannot create an inquiry with userId: 'user123'.
-     * @deny (get, list, update, delete) - User with UID 'user456' cannot read/list/update/delete inquiries owned by 'user123'.
-     * @principle Enforces document ownership for inquiries.
+     * @allow (get, list) Any user can get or list all inquiries.
+     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create a new inquiry with themselves as the owner.
+     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create an inquiry with another user as the owner.
+     * @allow (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can update and delete their own inquiries.
+     * @deny (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot update and delete inquiries owned by other users.
+     * @principle Enforces public read access with owner-only writes.
      */
     match /inquiries/{inquiryId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow list: if isSignedIn() && request.auth.uid == request.query.parameters.userId;
-
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.userId);
       allow delete: if isExistingOwner(resource.data.userId);
     }
 
     /**
-     * @description Allows users to manage messages within their own inquiries.
+     * @description Applies to messages within a customer service inquiry.
      * @path /inquiries/{inquiryId}/messages/{messageId}
-     * @allow (create) - User with UID 'user123' can create a message in inquiry 'inq123' if inquiry 'inq123' belongs to them (inquiry.userId == 'user123') and the message has the same userId.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/list/update/delete messages in inquiry 'inq123' if inquiry 'inq123' belongs to them and the message has the same userId.
-     * @deny (create) - User with UID 'user456' cannot create a message in inquiry 'inq123' if inquiry 'inq123' belongs to 'user123'.
-     * @deny (get, list, update, delete) - User with UID 'user456' cannot read/list/update/delete messages in inquiry 'inq123' if inquiry 'inq123' belongs to 'user123'.
-     * @principle Enforces document ownership for messages within inquiries.  Relies on parent inquiry for authorization.
+     * @allow (get, list) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can access messages only if they are the owner of the parent inquiry.
+     * @deny (get, list) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot access messages from inquiries owned by other users.
+     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create a message in an inquiry they own.
+     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create messages in inquiries owned by other users.
+     * @allow (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can update and delete messages only if they own the parent inquiry.
+     * @deny (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot update or delete messages in inquiries owned by other users.
+     * @principle Enforces owner-only access to messages within an inquiry.
      */
     match /inquiries/{inquiryId}/messages/{messageId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid && resource.data.userId == request.auth.uid;
-      allow list: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-
-      allow create: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-      allow delete: if isExistingOwner(resource.data.userId) && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      allow get: if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      allow list: if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      allow create: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      allow update: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
     }
   }
 }
