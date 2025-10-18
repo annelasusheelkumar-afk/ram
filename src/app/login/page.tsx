@@ -20,6 +20,7 @@ import {
   initiateEmailSignIn,
 } from '@/firebase/non-blocking-login';
 import { Separator } from '@/components/ui/separator';
+import { setPersistence, browserSessionPersistence } from 'firebase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,14 +46,15 @@ export default function LoginPage() {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // This non-blocking function will attempt sign-in and show a toast on error.
-    // The useEffect hook above will handle the redirect on success.
+    // Set persistence to 'session' to require login on each new session.
+    await setPersistence(auth, browserSessionPersistence);
     initiateEmailSignIn(auth, email, password);
   };
 
   const handleAnonymousSignIn = async () => {
     setIsGuestLoading(true);
-    // Same as above, useEffect will handle the redirect on successful anonymous login.
+    // Also set persistence for anonymous users if desired.
+    await setPersistence(auth, browserSessionPersistence);
     initiateAnonymousSignIn(auth);
   };
 
