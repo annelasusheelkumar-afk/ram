@@ -1,0 +1,53 @@
+/**
+ * @file Firebase Security Rules for ServAI User Profiles
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for the `/users/{userId}` collection.
+ * Each user can only access their own profile data.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores individual user profiles.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own profile data. Listing all users is denied.
+ * - The `id` field within the user document must match the `userId` in the path.
+ * - Updates ensure the `id` field remains immutable to prevent unauthorized ownership changes.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to individual user profiles.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user123' can create a profile at /users/user123 if the 'id' field matches.
+     * @allow (get, update, delete) - User with UID 'user123' can access their profile at /users/user123.
+     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
+     * @deny (get, update, delete) - User with UID 'user456' cannot access the profile at /users/user123.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      // Function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Function to check if the requested user ID matches the authenticated user's ID.
+      function isOwner(userId) {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Function to check if the user is an existing owner (isSignedIn and resource exists)
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

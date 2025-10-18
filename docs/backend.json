@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the ServAI customer service solution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The date and time when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "firstName",
+        "lastName",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  Access is restricted to the user identified by {userId}. Requires that `request.auth.uid == userId`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure prioritizes security and scalability for the ServAI application. It leverages path-based ownership for user data and avoids hierarchical authorization dependencies by storing roles directly in the database (DBAC). The structure supports secure list operations (QAPs) through structural segregation, ensuring that each collection has a homogeneous security posture. The design promotes clarity of intent by enforcing explicit state modeling and predictable schemas.\n\nThe `/users/{userId}` collection provides private storage for each user's profile data. This is a standard and secure pattern. This approach provides Authorization Independence, as all authorization is derived from the `request.auth.uid` and the path. This structure naturally supports QAPs, as listing operations on `/users` would typically be restricted to administrative roles (if needed)."
+  }
+}
