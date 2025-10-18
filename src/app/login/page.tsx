@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,19 +12,45 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
+import {
+  initiateAnonymousSignIn,
+  initiateEmailSignIn,
+} from '@/firebase/non-blocking-login';
+import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // Non-blocking call
+      initiateEmailSignIn(auth, email, password);
+      toast({ title: 'Signing in...' });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: error.message,
+      });
+      setIsLoading(false);
+    }
+  };
 
   const handleAnonymousSignIn = async () => {
-    setIsLoading(true);
+    setIsGuestLoading(true);
     try {
       // Non-blocking call
       initiateAnonymousSignIn(auth);
@@ -35,10 +62,8 @@ export default function LoginPage() {
         title: 'Anonymous sign-in failed',
         description: error.message,
       });
-      setIsLoading(false);
+      setIsGuestLoading(false);
     }
-    // No need for a finally block to set isLoading to false, 
-    // as the user is immediately navigated away.
   };
 
   return (
@@ -47,21 +72,59 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Welcome to ServAI</CardTitle>
           <CardDescription>
-            Get started right away with a guest account.
+            Sign in to your account or continue as a guest.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <form onSubmit={handleEmailSignIn}>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading || isGuestLoading}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading || isGuestLoading}
+              />
+            </div>
+            <Button className="w-full" type="submit" disabled={isLoading || isGuestLoading}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </Button>
+          </CardContent>
+        </form>
+        <CardFooter className="flex-col gap-4">
+           <div className="relative w-full">
+            <Separator />
+            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
+              OR
+            </span>
+          </div>
           <Button
             className="w-full"
+            variant="secondary"
             onClick={handleAnonymousSignIn}
-            disabled={isLoading}
+            disabled={isLoading || isGuestLoading}
           >
-            {isLoading ? 'Redirecting...' : 'Continue as Guest'}
+            {isGuestLoading ? 'Redirecting...' : 'Continue as Guest'}
           </Button>
-        </CardContent>
-        <CardFooter>
           <p className="text-center text-sm text-muted-foreground">
-            You can explore the app as a guest. Your session will be temporary.
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="underline">
+              Sign Up
+            </Link>
           </p>
         </CardFooter>
       </Card>

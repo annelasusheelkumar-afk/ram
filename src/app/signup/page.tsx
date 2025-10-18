@@ -4,13 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signUpWithEmail } from '@/app/auth/actions';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -32,29 +38,19 @@ export default function SignupPage() {
     }
     setIsLoading(true);
 
-    const result = await signUpWithEmail(email, password);
-
-    if (result.success) {
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        toast({ title: 'Account created successfully!' });
-        router.push('/');
-      } catch (signInError: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Sign in after sign up failed.',
-          description: signInError.message,
-        });
-      }
-    } else {
+    try {
+      // Non-blocking call
+      initiateEmailSignUp(auth, email, password);
+      toast({ title: 'Account created! Redirecting...' });
+      router.push('/');
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Sign up failed',
-        description: result.error,
+        description: error.message,
       });
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -62,21 +58,45 @@ export default function SignupPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Sign Up</CardTitle>
-          <CardDescription>Enter your information to create an account.</CardDescription>
+          <CardDescription>
+            Enter your information to create an account.
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input id="confirm-password" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
+              <Input
+                id="confirm-password"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
