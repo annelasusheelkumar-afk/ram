@@ -4,12 +4,25 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  User,
 } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
+import { doc, setDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+
+const handleNewUser = (user: User) => {
+    const firestore = getFirestore(user.app);
+    const userRef = doc(firestore, 'users', user.uid);
+    // Assign 'admin' role if the email matches, otherwise 'user'
+    const role = user.email === 'ceo@example.com' ? 'admin' : 'user';
+    setDoc(userRef, { email: user.email, role: role }, { merge: true });
+}
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance).catch(error => {
+  signInAnonymously(authInstance)
+    .then(userCredential => handleNewUser(userCredential.user))
+    .catch(error => {
     console.error('Anonymous sign-in failed:', error);
     toast({
       variant: 'destructive',
@@ -25,7 +38,9 @@ export function initiateEmailSignUp(
   email: string,
   password: string
 ): void {
-  createUserWithEmailAndPassword(authInstance, email, password).catch(
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .then(userCredential => handleNewUser(userCredential.user))
+    .catch(
     error => {
       console.error('Email sign-up failed:', error);
       let description = 'An unexpected error occurred.';

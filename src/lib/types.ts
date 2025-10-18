@@ -17,3 +17,21 @@ export type Message = {
     nanoseconds: number;
   };
 };
+
+export type UserProfile = {
+  id: string;
+  name?: string;
+  email: string;
+  role?: 'user' | 'admin';
+};
+
+export type Sale = {
+  id: string;
+  amount: number;
+  product: string;
+  userId: string;
+  date: {
+    seconds: number;
+    nanoseconds: number;
+  };
+};

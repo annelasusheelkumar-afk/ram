@@ -18,6 +18,14 @@
         "fcmToken": {
           "type": "string",
           "description": "The Firebase Cloud Messaging token for push notifications."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "user",
+            "admin"
+          ],
+          "description": "The role of the user, for access control."
         }
       },
       "required": [
@@ -93,6 +101,37 @@
         "message",
         "userId"
       ]
+    },
+    "Sale": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sale",
+      "type": "object",
+      "description": "Represents a single sales transaction.",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "description": "The total amount of the sale."
+        },
+        "product": {
+          "type": "string",
+          "description": "The name of the product sold."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the purchase."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the sale."
+        }
+      },
+      "required": [
+        "amount",
+        "product",
+        "userId",
+        "date"
+      ]
     }
   },
   "auth": {
@@ -119,6 +158,12 @@
         "$ref": "#/entities/Message"
       },
       "description": "Stores the chat log for a specific inquiry. Messages are sub-collections of inquiries."
+    },
+    "/sales/{saleId}": {
+      "schema": {
+        "$ref": "#/entities/Sale"
+      },
+      "description": "Stores sales transaction data. Can only be read by admins."
     }
   }
 }

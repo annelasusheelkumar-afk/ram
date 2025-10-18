@@ -14,15 +14,29 @@ import {
   SidebarInset,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, MessageCircle, List, Share2 } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, List, Share2, DollarSign } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
 import NotificationPermissionManager from './NotificationPermissionManager';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const handleShare = async () => {
     const shareData = {
@@ -35,13 +49,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         await navigator.share(shareData);
       } catch (err: any) {
-        // Silently ignore AbortError which occurs when the user cancels the share dialog
         if (err.name !== 'AbortError') {
             console.error('Error sharing:', err);
         }
       }
     } else {
-      // Fallback for browsers that do not support Web Share API
       try {
         await navigator.clipboard.writeText(shareData.url);
         toast({
@@ -105,6 +117,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             {userProfile?.role === 'admin' && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/admin')}
+                  tooltip="Sales Analytics"
+                >
+                  <Link href="/admin/sales">
+                    <DollarSign />
+                    <span>Sales Analytics</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
