@@ -33,7 +33,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // If auth state is resolved, there's no user, and we are not on an auth page, redirect to login.
     if (
       !isUserLoading &&
       !user &&
@@ -57,26 +56,25 @@ function AppContent({ children }: { children: React.ReactNode }) {
         throw new Error('Web Share API not supported');
       }
     } catch (err: any) {
-        // Fallback to clipboard if share fails or is not supported
-        try {
-            await navigator.clipboard.writeText(shareData.url);
-            toast({
-            title: 'Link Copied!',
-            description: 'App URL has been copied to your clipboard.',
-            });
-        } catch (copyErr) {
-            console.error('Failed to copy link:', copyErr);
-            toast({
-                variant: 'destructive',
-                title: 'Failed to copy link',
-            });
+        if (err.name !== 'AbortError') {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+                toast({
+                title: 'Link Copied!',
+                description: 'App URL has been copied to your clipboard.',
+                });
+            } catch (copyErr) {
+                console.error('Failed to copy link:', copyErr);
+                toast({
+                    variant: 'destructive',
+                    title: 'Failed to copy link',
+                });
+            }
         }
     }
   };
 
-
-  // Show skeleton loader while user is loading AND they are not on an auth page
-  if (isUserLoading && !['/login', '/signup', '/forgot-password'].includes(pathname)) {
+  if (isUserLoading) {
      return (
        <div className="flex h-screen w-full bg-background">
           <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
@@ -200,14 +198,11 @@ function useAuthDependentData() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-
-  // If we are on an authentication page, just render the children directly.
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/loading'].includes(pathname);
 
   if (isAuthPage) {
     return <>{children}</>;
   }
 
-  // Otherwise, render the full application layout which handles its own loading and auth checks.
   return <AppContent>{children}</AppContent>;
 }
