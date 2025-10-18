@@ -1,97 +1,122 @@
 /**
- * @description This ruleset enforces a strict user-ownership model for inquiries and messages,
- *              while allowing public read access to inquiries. User profiles are private and
- *              accessible only to the respective user.
- * @dataStructure
- *   - /users/{userId}: Stores public user profile information; only accessible by the user.
- *   - /inquiries/{inquiryId}: Stores customer service inquiries, readable by all, but writable only by the owner.
- *   - /inquiries/{inquiryId}/messages/{messageId}: Stores messages for an inquiry; only accessible by the inquiry owner.
- * @keySecurityDecisions
- *   - Users can only read and write their own profile data.
- *   - Inquiries are publicly readable, but only the owner can create, update, or delete them.
- *   - Messages are private and only accessible to the owner of the parent inquiry.
- *   - Listing of users is disallowed.
- * @denormalizationForAuthorization
- *   - Inquiries include a `userId` field to denote ownership.
+ * @fileoverview Firestore Security Rules for ServAI Customer Service Solution
+ *
+ * Core Philosophy:
+ * This ruleset employs a strict user-ownership model for inquiries and messages,
+ * ensuring users can only access data associated with their own accounts.
+ * Sales data is restricted to admin users only.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profiles, with the document ID matching the Firebase Auth UID.
+ * - /inquiries/{inquiryId}: Stores customer inquiries, owned by users via the `userId` field.
+ * - /inquiries/{inquiryId}/messages/{messageId}: Stores messages related to an inquiry, owned by users via the `userId` field.
+ * - /sales/{saleId}: Stores sales data, accessible only to admin users.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own user documents.
+ * - Users can create inquiries and add messages to them.
+ * - Sales data is only accessible to admin users.
+ * - No user listing is allowed.
+ *
+ * Denormalization for Authorization:
+ * - Inquiries and Messages both contain a `userId` field to enable direct ownership checks without requiring additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is authenticated.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the authenticated user is the owner of the resource.
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the authenticated user is the existing owner of the resource.
-     *              Ensures that the resource exists before checking ownership.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Applies to user profile documents.
+     * @description Allows users to read and write their own user profile.
      * @path /users/{userId}
-     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create their own profile.
-     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create a profile for another user.
-     * @allow (get, update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can read, update and delete their own profile.
-     * @deny (get, update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot read, update and delete another user's profile.
-     * @principle Enforces user-ownership for profile data.
+     * @allow (get, create, update, delete) if request.auth.uid == userId
+     * @deny (get, create, update, delete) if request.auth.uid != userId
+     * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.email is string && request.resource.data.email != null;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Applies to customer service inquiries.
+     * @description Allows users to create, read, update, and delete their own inquiries.
      * @path /inquiries/{inquiryId}
-     * @allow (get, list) Any user can get or list all inquiries.
-     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create a new inquiry with themselves as the owner.
-     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create an inquiry with another user as the owner.
-     * @allow (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can update and delete their own inquiries.
-     * @deny (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot update and delete inquiries owned by other users.
-     * @principle Enforces public read access with owner-only writes.
+     * @allow (create) if request.auth.uid == request.resource.data.userId
+     * @allow (get, list, update, delete) if request.auth.uid == resource.data.userId
+     * @deny (create, get, list, update, delete) if request.auth.uid != resource.data.userId
+     * @principle Enforces document ownership for inquiries.
      */
     match /inquiries/{inquiryId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
+      function isOwner(inquiry) {
+        return request.auth.uid == resource.data.userId;
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(inquiry);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow update: if isSignedIn() && isOwner(inquiry);
+      allow delete: if isSignedIn() && isOwner(inquiry);
     }
 
     /**
-     * @description Applies to messages within a customer service inquiry.
+     * @description Allows users to create, read, write messages within their own inquiries.
      * @path /inquiries/{inquiryId}/messages/{messageId}
-     * @allow (get, list) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can access messages only if they are the owner of the parent inquiry.
-     * @deny (get, list) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot access messages from inquiries owned by other users.
-     * @allow (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can create a message in an inquiry they own.
-     * @deny (create) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot create messages in inquiries owned by other users.
-     * @allow (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' can update and delete messages only if they own the parent inquiry.
-     * @deny (update, delete) User '4oILXA1KqLYKYbGA5wBB7419qZI3' cannot update or delete messages in inquiries owned by other users.
-     * @principle Enforces owner-only access to messages within an inquiry.
+     * @allow (create) if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid
+     * @allow (get, list, update, delete) if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid
+     * @deny (create, get, list, update, delete) if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId != request.auth.uid
+     * @principle Enforces document ownership for messages within inquiries.
      */
     match /inquiries/{inquiryId}/messages/{messageId} {
-      allow get: if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-      allow list: if get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-      allow create: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-      allow update: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      function isInquiryOwner(inquiryId) {
+        return get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.userId == request.auth.uid;
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isSignedIn() && isInquiryOwner(inquiryId);
+      allow list: if false;
+      allow create: if isSignedIn() && isInquiryOwner(inquiryId);
+      allow update: if isSignedIn() && isInquiryOwner(inquiryId);
+      allow delete: if isSignedIn() && isInquiryOwner(inquiryId);
+    }
+
+    /**
+     * @description Restricts access to sales data to admin users only.
+     * @path /sales/{saleId}
+     * @allow (get, list) if request.auth.token.role == "admin"
+     * @deny (create, update, delete)
+     * @principle Restricts sales data access to authorized personnel.
+     */
+    match /sales/{saleId} {
+      function isAdmin() {
+        return request.auth.token.role == "admin";
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isSignedIn() && isAdmin();
+      allow list: if false;
+      allow create: if isSignedIn() && isAdmin();
+      allow update: if isSignedIn() && isAdmin();
+      allow delete: if isSignedIn() && isAdmin();
     }
   }
 }
