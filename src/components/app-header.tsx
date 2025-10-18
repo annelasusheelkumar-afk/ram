@@ -44,12 +44,12 @@ export default function AppHeader() {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
-                <AvatarFallback>{user.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
+                <AvatarFallback>{user.email?.[0].toUpperCase() || 'G'}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{user.isAnonymous ? 'Anonymous User' : user.email}</DropdownMenuLabel>
+            <DropdownMenuLabel>{user.isAnonymous ? 'Guest User' : user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Support</DropdownMenuItem>
@@ -59,11 +59,8 @@ export default function AppHeader() {
         </DropdownMenu>
       ) : (
         <div className="flex items-center gap-2">
-            <Button asChild variant="ghost">
-                <Link href="/login">Login</Link>
-            </Button>
             <Button asChild>
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/login">Get Started</Link>
             </Button>
         </div>
       )}
