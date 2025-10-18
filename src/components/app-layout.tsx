@@ -13,7 +13,7 @@ import {
   SidebarProvider,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, MessageCircle } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
 
@@ -40,6 +40,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/dashboard">
                   <LayoutDashboard />
                   <span>Analytics</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/chatbot'}
+                tooltip="Chatbot"
+              >
+                <Link href="/chatbot">
+                  <MessageCircle />
+                  <span>Chatbot</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
