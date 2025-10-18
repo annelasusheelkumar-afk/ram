@@ -16,11 +16,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useUser } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeCustomerMessageSentiment } from '@/ai/flows/analyze-customer-message-sentiment';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -61,27 +64,38 @@ export default function NewInquiryForm({ onSuccess }: NewInquiryFormProps) {
       const sentimentResult = await analyzeCustomerMessageSentiment({
         message: values.message,
       });
-
+      
       // 2. Create the inquiry document
       const inquiriesRef = collection(firestore, 'inquiries');
-      const newInquiryRef = await addDocumentNonBlocking(inquiriesRef, {
+      const inquiryData = {
         title: values.title,
         userId: user.uid,
-        status: 'open',
+        status: 'open' as const,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
+      
+      const newInquiryRef = await addDoc(inquiriesRef, inquiryData)
+        .catch(serverError => {
+            const permissionError = new FirestorePermissionError({
+                path: inquiriesRef.path,
+                operation: 'create',
+                requestResourceData: inquiryData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            // Throw to prevent further execution in the `try` block
+            throw permissionError;
+        });
 
       // 3. Create the initial message sub-document
-      if (newInquiryRef) {
-        const messagesRef = collection(newInquiryRef, 'messages');
-        addDocumentNonBlocking(messagesRef, {
+      const messagesRef = collection(newInquiryRef, 'messages');
+      const messageData = {
           message: values.message,
           userId: user.uid,
           sentiment: sentimentResult.sentiment.toLowerCase(),
           timestamp: serverTimestamp(),
-        });
-      }
+      };
+      addDocumentNonBlocking(messagesRef, messageData);
 
 
       toast({
@@ -89,13 +103,18 @@ export default function NewInquiryForm({ onSuccess }: NewInquiryFormProps) {
         description: 'Your new inquiry has been successfully created.',
       });
       onSuccess(newInquiryRef.id);
-    } catch (error) {
-      console.error('Error creating inquiry:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to create inquiry',
-        description: 'An unexpected error occurred. Please try again.',
-      });
+
+    } catch (error: any) {
+      // Check if it's the permission error we emitted. If not, show a generic toast.
+      if (!(error instanceof FirestorePermissionError)) {
+        console.error('Error creating inquiry:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Failed to create inquiry',
+            description: 'An unexpected error occurred. Please try again.',
+        });
+      }
+      // Stop the loading indicator on any failure
       setIsSubmitting(false);
     }
   }
