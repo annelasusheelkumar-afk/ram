@@ -65,25 +65,26 @@ export function initiateEmailSignIn(
   password: string,
   onFailure?: () => void
 ): void {
-  signInWithEmailAndPassword(authInstance, email, password).catch(error => {
-    console.error('Email sign-in failed:', error);
-    let description = 'An unexpected error occurred.';
-    if (
-      error.code === 'auth/invalid-credential' ||
-      error.code === 'auth/wrong-password' ||
-      error.code === 'auth/user-not-found'
-    ) {
-      description = 'Invalid email or password. Please try again.';
-    }
-
-    if (onFailure) {
-      onFailure();
-    } else {
+  signInWithEmailAndPassword(authInstance, email, password)
+    .catch(error => {
+      console.error('Email sign-in failed:', error);
+      
+      if (onFailure) {
+        onFailure();
+      } else {
+        let description = 'An unexpected error occurred.';
+        if (
+          error.code === 'auth/invalid-credential' ||
+          error.code === 'auth/wrong-password' ||
+          error.code === 'auth/user-not-found'
+        ) {
+          description = 'Invalid email or password. Please try again.';
+        }
         toast({
             variant: 'destructive',
             title: 'Sign-in failed',
             description,
         });
-    }
+      }
   });
 }
