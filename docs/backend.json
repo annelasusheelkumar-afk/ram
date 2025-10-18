@@ -41,11 +41,90 @@
       "required": [
         "id",
         "username",
-        "email",
-        "firstName",
-        "lastName",
+        "email"
+      ]
+    },
+    "Inquiry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Inquiry",
+      "type": "object",
+      "description": "Represents a single customer service inquiry or conversation.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who initiated the inquiry."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "The name of the customer for the inquiry."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "resolved"
+          ],
+          "description": "The current status of the inquiry."
+        },
+        "lastMessage": {
+          "type": "string",
+          "description": "A snippet of the last message in the inquiry."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the inquiry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the inquiry was last updated."
+        }
+      },
+      "required": [
+        "userId",
+        "status",
         "createdAt",
         "updatedAt"
+      ]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a customer service inquiry.",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "description": "Who sent the message."
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the message."
+        },
+        "sentiment": {
+          "type": "string",
+          "enum": [
+            "positive",
+            "negative",
+            "neutral"
+          ],
+          "description": "The analyzed sentiment of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the message was sent."
+        }
+      },
+      "required": [
+        "role",
+        "content",
+        "createdAt"
       ]
     }
   },
@@ -56,24 +135,23 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile information.  Access is restricted to the user identified by {userId}. Requires that `request.auth.uid == userId`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "This Firestore structure prioritizes security and scalability for the ServAI application. It leverages path-based ownership for user data and avoids hierarchical authorization dependencies by storing roles directly in the database (DBAC). The structure supports secure list operations (QAPs) through structural segregation, ensuring that each collection has a homogeneous security posture. The design promotes clarity of intent by enforcing explicit state modeling and predictable schemas.\n\nThe `/users/{userId}` collection provides private storage for each user's profile data. This is a standard and secure pattern. This approach provides Authorization Independence, as all authorization is derived from the `request.auth.uid` and the path. This structure naturally supports QAPs, as listing operations on `/users` would typically be restricted to administrative roles (if needed)."
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores public-facing user profile information. The document ID is the same as the Firebase Auth user UID."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": {
+        "$ref": "#/entities/Inquiry"
+      },
+      "description": "Top-level collection for all customer service inquiries."
+    },
+    "/inquiries/{inquiryId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/Message"
+      },
+      "description": "Sub-collection storing all messages for a specific inquiry."
+    }
   }
 }
