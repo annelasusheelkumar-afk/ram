@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ import {
 } from '@/firebase/non-blocking-login';
 import { Separator } from '@/components/ui/separator';
 import { setPersistence, browserSessionPersistence } from 'firebase/auth';
+import SadBot from '@/components/sad-bot';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,6 +32,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGuestLoading, setIsGuestLoading] = useState(false);
+  const [showSadBot, setShowSadBot] = useState(false);
 
   useEffect(() => {
     // If the user is successfully authenticated (and not loading), redirect them.
@@ -43,12 +46,19 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
+  const handleLoginFailure = () => {
+    setShowSadBot(true);
+    // Also stop the loading spinner
+    setIsLoading(false);
+  };
+
+
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     // Set persistence to 'session' to require login on each new session.
     await setPersistence(auth, browserSessionPersistence);
-    initiateEmailSignIn(auth, email, password);
+    initiateEmailSignIn(auth, email, password, handleLoginFailure);
   };
 
   const handleAnonymousSignIn = async () => {
@@ -60,7 +70,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-full items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-sm relative overflow-hidden">
+        {showSadBot && <SadBot onAnimationEnd={() => setShowSadBot(false)} />}
         <CardHeader>
           <CardTitle className="text-2xl">Welcome to ServAI</CardTitle>
           <CardDescription>

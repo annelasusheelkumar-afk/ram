@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -61,7 +62,8 @@ export function initiateEmailSignUp(
 export function initiateEmailSignIn(
   authInstance: Auth,
   email: string,
-  password: string
+  password: string,
+  onFailure?: () => void
 ): void {
   signInWithEmailAndPassword(authInstance, email, password).catch(error => {
     console.error('Email sign-in failed:', error);
@@ -73,10 +75,15 @@ export function initiateEmailSignIn(
     ) {
       description = 'Invalid email or password. Please try again.';
     }
-    toast({
-      variant: 'destructive',
-      title: 'Sign-in failed',
-      description,
-    });
+
+    if (onFailure) {
+      onFailure();
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Sign-in failed',
+            description,
+        });
+    }
   });
 }
