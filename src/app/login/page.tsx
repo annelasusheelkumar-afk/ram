@@ -37,8 +37,8 @@ export default function LoginPage() {
     try {
       // Non-blocking call
       initiateEmailSignIn(auth, email, password);
-      toast({ title: 'Signing in...' });
-      router.push('/');
+      // Redirect to the loading page
+      router.push('/loading');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -54,8 +54,8 @@ export default function LoginPage() {
     try {
       // Non-blocking call
       initiateAnonymousSignIn(auth);
-      toast({ title: 'Signing in as guest...' });
-      router.push('/');
+      // Redirect to the loading page
+      router.push('/loading');
     } catch (error: any) {
       toast({
         variant: 'destructive',

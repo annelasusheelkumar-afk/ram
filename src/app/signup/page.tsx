@@ -41,8 +41,8 @@ export default function SignupPage() {
     try {
       // Non-blocking call
       initiateEmailSignUp(auth, email, password);
-      toast({ title: 'Account created! Redirecting...' });
-      router.push('/');
+      // Redirect to the loading page
+      router.push('/loading');
     } catch (error: any) {
       toast({
         variant: 'destructive',
