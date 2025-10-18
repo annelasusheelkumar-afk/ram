@@ -42,7 +42,7 @@ export function initiateEmailSignUp(
   createUserWithEmailAndPassword(authInstance, email, password)
     .then(userCredential => handleNewUser(userCredential.user))
     .catch(
-    error => {
+    (error: any) => {
       console.error('Email sign-up failed:', error);
       let description = 'An unexpected error occurred.';
       if (error.code === 'auth/email-already-in-use') {
