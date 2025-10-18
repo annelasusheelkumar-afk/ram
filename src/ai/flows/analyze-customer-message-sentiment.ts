@@ -20,7 +20,7 @@ const AnalyzeCustomerMessageSentimentOutputSchema = z.object({
   sentiment: z
     .string()
     .describe(
-      'The sentiment of the customer message (e.g., positive, negative, neutral).'n
+      'The sentiment of the customer message (e.g., positive, negative, neutral).'
     ),
   score: z
     .number()
