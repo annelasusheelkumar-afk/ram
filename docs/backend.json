@@ -6,40 +6,17 @@
       "type": "object",
       "description": "Represents a user of the ServAI customer service solution.",
       "properties": {
-        "id": {
+        "name": {
           "type": "string",
-          "description": "Unique identifier for the user."
-        },
-        "username": {
-          "type": "string",
-          "description": "The username of the user."
+          "description": "The name of the user."
         },
         "email": {
           "type": "string",
           "description": "The email address of the user.",
           "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time when the user account was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time when the user account was last updated.",
-          "format": "date-time"
         }
       },
       "required": [
-        "id",
         "email"
       ]
     },
@@ -49,17 +26,13 @@
       "type": "object",
       "description": "Represents a single customer service inquiry or ticket.",
       "properties": {
-        "id": {
+        "title": {
           "type": "string",
-          "description": "Unique identifier for the inquiry."
+          "description": "A brief title or summary of the inquiry."
         },
         "userId": {
           "type": "string",
           "description": "The ID of the user who created the inquiry."
-        },
-        "title": {
-          "type": "string",
-          "description": "A brief title or summary of the inquiry."
         },
         "status": {
           "type": "string",
@@ -71,34 +44,15 @@
           ],
           "description": "The current status of the inquiry."
         },
-        "sentiment": {
-          "type": "string",
-          "enum": [
-            "positive",
-            "negative",
-            "neutral"
-          ],
-          "description": "The overall sentiment of the inquiry, determined by AI."
-        },
-        "sentimentScore": {
-          "type": "number",
-          "description": "A numerical score indicating the strength of the sentiment."
-        },
         "createdAt": {
           "type": "string",
           "description": "The date and time when the inquiry was created.",
           "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time when the inquiry was last updated.",
-          "format": "date-time"
         }
       },
       "required": [
-        "id",
-        "userId",
         "title",
+        "userId",
         "status"
       ]
     },
@@ -108,37 +62,32 @@
       "type": "object",
       "description": "Represents a single message within a customer service inquiry chat log.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the message."
-        },
-        "senderId": {
-          "type": "string",
-          "description": "The ID of the sender (can be a user or 'bot')."
-        },
-        "senderType": {
-          "type": "string",
-          "enum": [
-            "user",
-            "bot"
-          ],
-          "description": "The type of the sender."
-        },
-        "content": {
+        "message": {
           "type": "string",
           "description": "The text content of the message."
         },
-        "createdAt": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who sent the message."
+        },
+        "sentiment": {
+          "type": "string",
+          "enum": [
+            "positive",
+            "negative",
+            "neutral"
+          ],
+          "description": "The overall sentiment of the message, determined by AI."
+        },
+        "timestamp": {
           "type": "string",
           "description": "The date and time when the message was sent.",
           "format": "date-time"
         }
       },
       "required": [
-        "id",
-        "senderId",
-        "senderType",
-        "content"
+        "message",
+        "userId"
       ]
     }
   },

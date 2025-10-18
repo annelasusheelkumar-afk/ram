@@ -18,7 +18,7 @@ import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateResponseToCustomerInquiry } from '@/ai/flows/generate-response-to-customer-inquiry';
 import type { Inquiry, Message } from '@/lib/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import { CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   const messagesQuery = useMemoFirebase(
     () =>
       inquiryRef
-        ? query(collection(inquiryRef, 'messages'), orderBy('createdAt', 'asc'))
+        ? query(collection(inquiryRef, 'messages'), orderBy('timestamp', 'asc'))
         : null,
     [inquiryRef]
   );
@@ -78,16 +78,15 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
     e.preventDefault();
     if (!input.trim() || !user || !inquiryRef) return;
 
-    const userMessage: Omit<Message, 'id' | 'createdAt'> = {
-      content: input,
-      senderId: user.uid,
-      senderType: 'user',
+    const userMessage: Omit<Message, 'id' | 'timestamp'> = {
+      message: input,
+      userId: user.uid,
     };
     
     setInput('');
     addDocumentNonBlocking(collection(inquiryRef, 'messages'), {
       ...userMessage,
-      createdAt: serverTimestamp(),
+      timestamp: serverTimestamp(),
     });
 
     setIsBotReplying(true);
@@ -98,27 +97,26 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
         customerServiceContext: inquiry?.title,
       });
 
-      const botMessage: Omit<Message, 'id' | 'createdAt'> = {
-        content: result.response,
-        senderId: 'bot',
-        senderType: 'bot',
+      const botMessage: Omit<Message, 'id' | 'timestamp'> = {
+        message: result.response,
+        userId: 'bot',
+        sentiment: result.sentiment.toLowerCase() as Message['sentiment'],
       };
       
       addDocumentNonBlocking(collection(inquiryRef, 'messages'), {
           ...botMessage,
-          createdAt: serverTimestamp(),
+          timestamp: serverTimestamp(),
       });
 
     } catch (error) {
       console.error('Error generating bot response:', error);
-      const errorMessage: Omit<Message, 'id'| 'createdAt'> = {
-        content: 'Sorry, I had trouble getting a response. Please try again.',
-        senderId: 'bot',
-        senderType: 'bot',
+      const errorMessage: Omit<Message, 'id'| 'timestamp'> = {
+        message: 'Sorry, I had trouble getting a response. Please try again.',
+        userId: 'bot',
       };
       addDocumentNonBlocking(collection(inquiryRef, 'messages'), {
         ...errorMessage,
-        createdAt: serverTimestamp(),
+        timestamp: serverTimestamp(),
     });
     } finally {
       setIsBotReplying(false);
@@ -148,17 +146,6 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
                     >
                         {inquiry?.status}
                     </Badge>
-                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <span
-                          className={cn(
-                            'h-2 w-2 rounded-full',
-                            inquiry?.sentiment === 'positive' && 'bg-positive',
-                            inquiry?.sentiment === 'negative' && 'bg-destructive',
-                            inquiry?.sentiment === 'neutral' && 'bg-neutral'
-                          )}
-                        />
-                        <span>{inquiry?.sentiment || 'N/A'}</span>
-                      </div>
                 </div>
             </div>
          </div>
@@ -170,26 +157,26 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
               key={message.id}
               className={cn(
                 'flex items-start gap-3',
-                message.senderType === 'user' ? 'flex-row-reverse' : 'flex-row'
+                message.userId !== 'bot' ? 'flex-row-reverse' : 'flex-row'
               )}
             >
               <Avatar className="h-9 w-9">
-                {message.senderType === 'bot' && <BotAvatar />}
+                {message.userId === 'bot' && <BotAvatar />}
                 <AvatarFallback>
-                  {message.senderType === 'user' ? (user?.email?.[0].toUpperCase() || 'U') : 'R'}
+                  {message.userId !== 'bot' ? (user?.email?.[0].toUpperCase() || 'U') : 'R'}
                 </AvatarFallback>
               </Avatar>
               <div
                 className={cn(
                   'max-w-md rounded-lg p-3 text-sm',
-                  message.senderType === 'user'
+                  message.userId !== 'bot'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
                 )}
               >
-                <p>{message.content}</p>
-                 {message.createdAt && <p className="mt-1 text-xs text-muted-foreground/80">
-                  {new Date(message.createdAt.seconds * 1000).toLocaleTimeString()}
+                <p>{message.message}</p>
+                 {message.timestamp && <p className="mt-1 text-xs text-muted-foreground/80">
+                  {new Date(message.timestamp.seconds * 1000).toLocaleTimeString()}
                 </p>}
               </div>
             </div>

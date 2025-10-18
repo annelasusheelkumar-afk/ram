@@ -16,7 +16,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import NewInquiryForm from './new-inquiry-form';
 import { Inquiry } from '@/lib/types';
@@ -63,7 +62,6 @@ export default function InquiriesList() {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Sentiment</TableHead>
                 <TableHead>Created At</TableHead>
               </TableRow>
             </TableHeader>
@@ -88,26 +86,13 @@ export default function InquiriesList() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            'h-2 w-2 rounded-full',
-                            inquiry.sentiment === 'positive' && 'bg-positive',
-                            inquiry.sentiment === 'negative' && 'bg-destructive',
-                            inquiry.sentiment === 'neutral' && 'bg-neutral'
-                          )}
-                        />
-                        <span>{inquiry.sentiment || 'N/A'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
                       {inquiry.createdAt ? new Date(inquiry.createdAt).toLocaleDateString() : 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={3} className="text-center">
                     No inquiries found.
                   </TableCell>
                 </TableRow>

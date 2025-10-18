@@ -68,8 +68,6 @@ export default function NewInquiryForm({ onSuccess }: NewInquiryFormProps) {
         title: values.title,
         userId: user.uid,
         status: 'open',
-        sentiment: sentimentResult.sentiment.toLowerCase(),
-        sentimentScore: sentimentResult.score,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -78,10 +76,10 @@ export default function NewInquiryForm({ onSuccess }: NewInquiryFormProps) {
       if (newInquiryRef) {
         const messagesRef = collection(newInquiryRef, 'messages');
         addDocumentNonBlocking(messagesRef, {
-          content: values.message,
-          senderId: user.uid,
-          senderType: 'user',
-          createdAt: serverTimestamp(),
+          message: values.message,
+          userId: user.uid,
+          sentiment: sentimentResult.sentiment.toLowerCase(),
+          timestamp: serverTimestamp(),
         });
       }
 
