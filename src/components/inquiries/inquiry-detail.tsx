@@ -8,19 +8,20 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateResponseToCustomerInquiry } from '@/ai/flows/generate-response-to-customer-inquiry';
+import { resolveCustomerInquiry } from '@/ai/flows/resolve-customer-inquiry';
 import type { Inquiry, Message } from '@/lib/types';
 import { CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 const BotAvatar = () => (
@@ -106,15 +107,31 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
     setIsBotReplying(true);
 
     try {
-      const result = await generateResponseToCustomerInquiry({
-        customerInquiry: input,
-        customerServiceContext: inquiry?.title,
+      // First, try to resolve the inquiry
+      const resolutionResult = await resolveCustomerInquiry({
+        inquiryTitle: inquiry?.title || '',
+        inquiryMessage: input,
       });
 
+      let botMessageText = '';
+
+      if (resolutionResult.resolutionSteps.length > 0) {
+        botMessageText = `I think I can help with that. Here are some steps that might resolve the issue:\n\n${resolutionResult.resolutionSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}\n\n${resolutionResult.resolutionSummary}`;
+        if (resolutionResult.isResolved) {
+          await updateDoc(inquiryRef, { status: 'resolved' });
+        }
+      } else {
+         // If no resolution steps, fall back to the general response
+        const generalResult = await generateResponseToCustomerInquiry({
+          customerInquiry: input,
+          customerServiceContext: inquiry?.title,
+        });
+        botMessageText = generalResult.response;
+      }
+      
       const botMessage: Omit<Message, 'id' | 'timestamp'> = {
-        message: result.response,
+        message: botMessageText,
         userId: 'bot',
-        sentiment: result.sentiment.toLowerCase() as Message['sentiment'],
       };
       
       addDocumentNonBlocking(collection(inquiryRef, 'messages'), {
@@ -183,7 +200,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
               </Avatar>
               <div
                 className={cn(
-                  'max-w-md rounded-lg p-3 text-sm',
+                  'max-w-md rounded-lg p-3 text-sm whitespace-pre-wrap',
                   message.userId !== 'bot'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
