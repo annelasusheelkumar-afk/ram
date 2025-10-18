@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, MessageCircle, Smile, Clock } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DollarSign, MessageCircle, Smile, Clock, List } from 'lucide-react';
 import SentimentChart from '@/components/dashboard/sentiment-chart';
 import ResponseTimeChart from '@/components/dashboard/response-time-chart';
 import RecentInquiriesTable from '@/components/dashboard/recent-inquiries-table';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const stats = [
   { title: 'Total Inquiries', value: '1,234', icon: MessageCircle, change: '+12.5%' },
@@ -50,8 +52,14 @@ export default function DashboardPage() {
         </Card>
       </div>
        <Card>
-        <CardHeader>
-            <CardTitle className="font-headline">Recent Inquiries</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle className="font-headline">Recent Inquiries</CardTitle>
+                <CardDescription>A list of the most recent customer inquiries.</CardDescription>
+            </div>
+            <Button asChild>
+                <Link href="/inquiries">View All</Link>
+            </Button>
         </CardHeader>
         <CardContent>
             <RecentInquiriesTable />

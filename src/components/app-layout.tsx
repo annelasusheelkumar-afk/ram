@@ -13,7 +13,7 @@ import {
   SidebarProvider,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, List } from 'lucide-react';
 import Logo from './logo';
 import AppHeader from './app-header';
 
@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === '/dashboard'}
+                isActive={pathname.startsWith('/dashboard')}
                 tooltip="Dashboard"
               >
                 <Link href="/dashboard">
@@ -46,7 +46,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === '/chatbot'}
+                isActive={pathname.startsWith('/inquiries')}
+                tooltip="Inquiries"
+              >
+                <Link href="/inquiries">
+                  <List />
+                  <span>Inquiries</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith('/chatbot')}
                 tooltip="Chatbot"
               >
                 <Link href="/chatbot">
