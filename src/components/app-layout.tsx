@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
   SidebarContent,
@@ -23,12 +23,14 @@ import { useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { useFirestore } from '@/firebase/provider';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const userProfileRef = useMemoFirebase(() => {
@@ -37,6 +39,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [firestore, user]);
 
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+  React.useEffect(() => {
+    // If auth state is resolved and there's no user, redirect to login.
+    // Allow access to login, signup, and forgot-password pages.
+    if (
+      !isUserLoading &&
+      !user &&
+      !['/login', '/signup', '/forgot-password'].includes(pathname)
+    ) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router, pathname]);
 
   const handleShare = async () => {
     const shareData = {
@@ -52,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         // Silently ignore AbortError (user cancellation) and other permission errors.
         // Log others for debugging, but don't crash.
         if (err.name !== 'AbortError') {
-          console.log('Could not share:', err); // Changed to console.log to be less alarming than console.error
+          console.log('Could not share:', err);
         }
       }
     } else {
@@ -71,6 +85,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
     }
   };
+
+  // While checking auth, show a loading skeleton.
+  // Or if there's no user and we're not on an auth page, we're about to redirect,
+  // so show loading to prevent flashing content.
+  if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
+      return (
+          <div className="flex h-screen w-full">
+            <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-muted/40 w-64">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="flex-1">
+                <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background/80 px-4 backdrop-blur-sm">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                </header>
+                <main className="p-8">
+                     <Skeleton className="h-96 w-full" />
+                </main>
+            </div>
+          </div>
+      );
+  }
+
+  // If on login/signup, render children without the main app layout
+  if (['/login', '/signup', '/forgot-password'].includes(pathname)) {
+    return <>{children}</>;
+  }
 
   return (
     <SidebarProvider>
