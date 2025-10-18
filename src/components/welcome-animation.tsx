@@ -50,6 +50,8 @@ const WelcomeAnimation = () => {
         }
       `}</style>
 
+      {isAnimating && <div className="sparkle-container"><div className="sparkle" /></div>}
+
       <div
         className={cn(
           'absolute bottom-0 transition-transform duration-1000',
@@ -100,7 +102,7 @@ const WelcomeAnimation = () => {
           isAnimating ? 'speech-bubble' : 'opacity-0'
         )}
       >
-        <p className="font-headline font-semibold">Welcome to ServAI!</p>
+        <p className="font-headline font-semibold">Welcome!</p>
       </div>
     </div>
   );
