@@ -39,7 +39,13 @@ const BotAvatar = () => (
 
 export default function ChatPanel() {
   const { user } = useUser();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      text: 'Welcome to the ServAI chatbot! How can I help you today?',
+      isUser: false,
+      timestamp: new Date(),
+    },
+  ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
