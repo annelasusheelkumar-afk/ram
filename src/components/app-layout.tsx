@@ -91,24 +91,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // so show loading to prevent flashing content.
   if (isUserLoading || (!user && !['/login', '/signup', '/forgot-password'].includes(pathname))) {
       return (
-        <SidebarProvider>
-          <div className="flex h-screen w-full">
-            <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-muted/40 w-64">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="flex-1">
-                <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background/80 px-4 backdrop-blur-sm">
-                    <Skeleton className="h-9 w-9 rounded-full" />
-                </header>
-                <main className="p-8">
-                     <Skeleton className="h-96 w-full" />
-                </main>
-            </div>
+        <div className="flex h-screen w-full">
+          <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-muted/40 w-64">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
           </div>
-        </SidebarProvider>
+          <div className="flex-1">
+              <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background/80 px-4 backdrop-blur-sm">
+                  <Skeleton className="h-9 w-9 rounded-full" />
+              </header>
+              <main className="p-8">
+                   <Skeleton className="h-96 w-full" />
+              </main>
+          </div>
+        </div>
       );
   }
 
