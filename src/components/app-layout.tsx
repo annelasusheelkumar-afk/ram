@@ -34,12 +34,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === '/'}
-                tooltip="Chat"
+                isActive={pathname.startsWith('/inquiries')}
+                tooltip="Inquiries"
               >
-                <Link href="/">
+                <Link href="/inquiries">
                   <MessageSquare />
-                  <span>Customer Chat</span>
+                  <span>Inquiries</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

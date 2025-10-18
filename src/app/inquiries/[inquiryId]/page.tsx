@@ -1,19 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { getAiResponse } from '@/app/actions';
+import { getAiResponseAndSave } from '@/app/inquiries/actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, User, Bot, AlertTriangle, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useMessages } from '@/hooks/use-messages';
+import { useUser } from '@/firebase';
 
 type Message = {
-  id: number;
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   sentiment?: string;
+  createdAt: any;
 };
 
 function SubmitButton({ isPending }: { isPending: boolean }) {
@@ -24,14 +27,12 @@ function SubmitButton({ isPending }: { isPending: boolean }) {
   );
 }
 
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: Date.now(),
-      role: 'assistant',
-      content: "Hello! I'm ServAI, your virtual assistant. How can I help you today?",
-    },
-  ]);
+export default function InquiryChatPage({ params }: { params: { inquiryId: string } }) {
+  const { inquiryId } = params;
+  const { user } = useUser();
+  const { messages, isLoading: messagesLoading } = useMessages(inquiryId);
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
+
   const [error, setError] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,45 +47,62 @@ export default function ChatInterface() {
     }
   };
 
-  useEffect(scrollToBottom, [messages]);
-  
+  useEffect(() => {
+    // When real messages load, clear optimistic messages
+    setOptimisticMessages([]);
+  }, [messages]);
+
+  useEffect(scrollToBottom, [messages, optimisticMessages, isPending]);
+
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const userMessage = formData.get('message') as string;
+    const userMessageContent = formData.get('message') as string;
 
-    if (!userMessage.trim()) return;
+    if (!userMessageContent.trim() || !user) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: 'user', content: userMessage },
-    ]);
+    const optimisticMessage: Message = {
+        id: `optimistic-${Date.now()}`,
+        role: 'user',
+        content: userMessageContent,
+        createdAt: new Date(),
+    };
+
+    setOptimisticMessages(prev => [...prev, optimisticMessage]);
+    
     setError(undefined);
     formRef.current?.reset();
 
+    // Add inquiryId and userId to formData for the server action
+    formData.append('inquiryId', inquiryId);
+    formData.append('userId', user.uid);
+
+
     startTransition(async () => {
-      const result = await getAiResponse({ error: error }, formData);
+      const result = await getAiResponseAndSave({ error: error }, formData);
       if (result.error) {
         setError(result.error);
-      } else if (result.response) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            role: 'assistant',
-            content: result.response,
-            sentiment: result.sentiment,
-          },
-        ]);
-      }
+        setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      } 
+      // Successful processing will be reflected by the real-time listener
+      // so no need to add AI response optimistically
     });
   };
 
+  const allMessages = [...(messages || []), ...optimisticMessages].sort(
+    (a, b) => (a.createdAt?.toDate?.() || a.createdAt) - (b.createdAt?.toDate?.() || b.createdAt)
+  );
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto p-4 md:p-6" ref={scrollAreaRef}>
+       <div className="flex-1 overflow-y-auto p-4 md:p-6" ref={scrollAreaRef}>
         <div className="space-y-6 pr-4">
-          {messages.map((message) => (
+          {messagesLoading && allMessages.length === 0 && (
+            <div className="flex justify-center items-center h-full">
+                <Sparkles className="animate-spin h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
+          {allMessages.map((message) => (
             <div
               key={message.id}
               className={cn(
@@ -130,7 +148,7 @@ export default function ChatInterface() {
                 <Card className="max-w-md rounded-2xl shadow-md bg-card">
                     <CardContent className="p-3 flex items-center gap-2">
                         <Sparkles className="animate-spin h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground text-sm font-body">ServAI is thinking...</span>
+                        <span className="text-sm font-body text-muted-foreground">ServAI is thinking...</span>
                     </CardContent>
                 </Card>
              </div>
@@ -144,10 +162,10 @@ export default function ChatInterface() {
             placeholder="Type your message..."
             className="flex-1"
             autoComplete="off"
-            disabled={isPending}
+            disabled={isPending || messagesLoading}
           />
           <SubmitButton isPending={isPending} />
-          <Button variant="accent" disabled={isPending}>
+          <Button variant="outline" disabled={isPending}>
             <AlertTriangle className="mr-2 h-4 w-4"/> Escalate
           </Button>
         </form>

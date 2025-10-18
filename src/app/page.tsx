@@ -1,5 +1,5 @@
-import ChatInterface from '@/components/chat-interface';
+import InquiriesPage from './inquiries/page';
 
 export default function Home() {
-  return <ChatInterface />;
+  return <InquiriesPage />;
 }
