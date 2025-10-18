@@ -48,6 +48,8 @@ export function initiateEmailSignUp(
       if (error.code === 'auth/email-already-in-use') {
         description =
           'This email is already in use. Please try logging in instead.';
+      } else if (error.code === 'auth/weak-password') {
+        description = 'Password should be at least 6 characters.';
       }
       toast({
         variant: 'destructive',
