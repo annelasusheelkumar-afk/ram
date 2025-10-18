@@ -38,19 +38,13 @@ export default function SignupPage() {
     }
     setIsLoading(true);
 
-    try {
-      // Non-blocking call
-      initiateEmailSignUp(auth, email, password);
-      // Redirect to the loading page
-      router.push('/loading');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign up failed',
-        description: error.message,
-      });
-      setIsLoading(false);
-    }
+    // Non-blocking call. We initiate the sign-up and immediately redirect.
+    // The non-blocking-login function now handles its own errors with toasts.
+    initiateEmailSignUp(auth, email, password);
+    // We redirect optimistically. The onAuthStateChanged listener will handle
+    // the UI state once authentication completes or fails. If it fails,
+    // the user will be brought back to the login screen by the auth listener logic.
+    router.push('/loading');
   };
 
   return (

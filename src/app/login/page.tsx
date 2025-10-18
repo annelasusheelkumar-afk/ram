@@ -24,7 +24,6 @@ import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const auth = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,36 +33,20 @@ export default function LoginPage() {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      // Non-blocking call
-      initiateEmailSignIn(auth, email, password);
-      // Redirect to the loading page
-      router.push('/loading');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign-in failed',
-        description: error.message,
-      });
-      setIsLoading(false);
-    }
+    // Non-blocking call. We initiate the sign-in and immediately redirect.
+    // The non-blocking-login function now handles its own errors with toasts.
+    initiateEmailSignIn(auth, email, password);
+    // We redirect optimistically. The onAuthStateChanged listener will handle
+    // the UI state once authentication completes or fails. If it fails,
+    // the user will be brought back to the login screen by the auth listener logic.
+    router.push('/loading');
   };
 
   const handleAnonymousSignIn = async () => {
     setIsGuestLoading(true);
-    try {
-      // Non-blocking call
-      initiateAnonymousSignIn(auth);
-      // Redirect to the loading page
-      router.push('/loading');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Anonymous sign-in failed',
-        description: error.message,
-      });
-      setIsGuestLoading(false);
-    }
+    // Non-blocking call, same as above.
+    initiateAnonymousSignIn(auth);
+    router.push('/loading');
   };
 
   return (
