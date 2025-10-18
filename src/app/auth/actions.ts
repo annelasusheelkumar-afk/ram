@@ -1,9 +1,9 @@
 'use server';
 
-import { 
-  initiateEmailSignUp, 
+import {
+  initiateEmailSignUp,
   initiateEmailSignIn,
-  initiateAnonymousSignIn
+  initiateAnonymousSignIn,
 } from '@/firebase/non-blocking-login';
 import { getAuth, signOut as clientSignOut } from 'firebase/auth';
 
@@ -11,7 +11,10 @@ import { getAuth, signOut as clientSignOut } from 'firebase/auth';
 // Note: We use the non-blocking functions to initiate auth changes on the client.
 // The actual state change is handled by the onAuthStateChanged listener in the FirebaseProvider.
 
-export async function signUpWithEmail(email: string, password: string): Promise<{ success: boolean, error?: string }> {
+export async function signUpWithEmail(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     // This action simply signals the client to attempt sign-up.
     // We are not actually performing the sign up on the server.
@@ -22,23 +25,28 @@ export async function signUpWithEmail(email: string, password: string): Promise<
   }
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<{ success: boolean, error?: string }> {
-    // This action simply signals the client to attempt sign-in.
-    // We are not actually performing the sign in on the server.
-    // The client-side firebase SDK will handle it.
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  // This action simply signals the client to attempt sign-in.
+  // We are not actually performing the sign in on the server.
+  // The client-side firebase SDK will handle it.
   return { success: true };
 }
 
-export async function signInAnonymously(): Promise<{ success: boolean, error?: string }> {
-    // This action simply signals the client to attempt anonymous sign-in.
+export async function signInAnonymously(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  // This action simply signals the client to attempt anonymous sign-in.
   return { success: true };
 }
-
 
 export async function signOut(): Promise<{ success: boolean; error?: string }> {
   try {
-    // This needs to be called on the client. We're just orchestrating
-    // but the actual sign out will be on the client in the component
+    // The actual sign-out is handled on the client-side by calling firebaseSignOut(getAuth()).
+    // This server action is kept for consistency but doesn't perform the sign-out itself.
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

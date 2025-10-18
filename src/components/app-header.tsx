@@ -11,20 +11,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/firebase';
-import { signOut } from '@/app/auth/actions';
+import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function AppHeader() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar-1');
 
   const handleLogout = async () => {
-    await signOut();
-    router.push('/login');
+    try {
+      const auth = getAuth();
+      await firebaseSignOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Optionally, show a toast notification on error
+    }
   };
 
   if (isUserLoading) {
@@ -44,7 +48,7 @@ export default function AppHeader() {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
-                <AvatarFallback>{user.email?.[0].toUpperCase() || 'G'}</AvatarFallback>
+                <AvatarFallback>{user.isAnonymous ? 'G' : user.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
