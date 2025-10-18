@@ -16,6 +16,27 @@ interface Message {
   timestamp: Date;
 }
 
+const BotAvatar = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-full w-full text-primary"
+    >
+      <path d="M12 8V4H8" />
+      <rect width="16" height="12" x="4" y="8" rx="2" />
+      <path d="M2 14h2" />
+      <path d="M20 14h2" />
+      <path d="M15 13v2" />
+      <path d="M9 13v2" />
+    </svg>
+);
+
+
 export default function ChatPanel() {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,10 +96,10 @@ export default function ChatPanel() {
                 {message.isUser ? (
                   user?.photoURL && <AvatarImage src={user.photoURL} alt="User" />
                 ) : (
-                  <AvatarImage src="/icon.svg" alt="Bot" />
+                  <BotAvatar />
                 )}
                 <AvatarFallback>
-                  {message.isUser ? (user?.email?.[0].toUpperCase() || 'U') : 'B'}
+                  {message.isUser ? (user?.email?.[0].toUpperCase() || 'U') : 'R'}
                 </AvatarFallback>
               </Avatar>
               <div
@@ -99,8 +120,8 @@ export default function ChatPanel() {
           {isLoading && (
              <div className="flex items-start gap-3 flex-row">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="/icon.svg" alt="Bot" />
-                  <AvatarFallback>B</AvatarFallback>
+                  <BotAvatar />
+                  <AvatarFallback>R</AvatarFallback>
                 </Avatar>
                 <div className="max-w-xs rounded-lg p-3 text-sm bg-muted">
                     <p>Thinking...</p>
