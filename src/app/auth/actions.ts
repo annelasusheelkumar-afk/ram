@@ -5,7 +5,6 @@ import {
   initiateEmailSignIn,
   initiateAnonymousSignIn,
 } from '@/firebase/non-blocking-login';
-import { getAuth, sendPasswordResetEmail, signOut as clientSignOut } from 'firebase/auth';
 
 // Server actions for authentication
 // Note: We use the non-blocking functions to initiate auth changes on the client.
@@ -51,24 +50,4 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
   } catch (error: any) {
     return { success: false, error: error.message };
   }
-}
-
-export async function sendResetPasswordEmail(
-    email: string
-): Promise<{ success: boolean; error?: string }> {
-    try {
-        // We can't use the client-side auth instance here, so we must initialize a temporary one
-        // on the server to send the email. This is a safe operation.
-        const auth = getAuth();
-        await sendPasswordResetEmail(auth, email);
-        return { success: true };
-    } catch (error: any) {
-        console.error('Password reset email error:', error);
-        // Don't leak information about whether the user exists or not.
-        // Return success even if the email is not found.
-        if (error.code === 'auth/user-not-found') {
-            return { success: true };
-        }
-        return { success: false, error: 'Failed to send reset email.' };
-    }
 }
