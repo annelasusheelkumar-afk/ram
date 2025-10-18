@@ -71,9 +71,14 @@ export function initiateEmailSignIn(
     .catch(error => {
       console.error('Email sign-in failed:', error);
       
+      // Always call the onFailure callback if it exists, to handle UI changes like the sad bot.
       if (onFailure) {
         onFailure();
-      } else {
+      }
+
+      // Check for specific credential errors and show a toast, but only if there isn't an onFailure handler
+      // that might be showing a different kind of feedback (like the sad bot).
+      if (!onFailure) {
         let description = 'An unexpected error occurred.';
         if (
           error.code === 'auth/invalid-credential' ||
