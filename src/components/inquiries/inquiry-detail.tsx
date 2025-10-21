@@ -32,6 +32,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import QRCode from 'qrcode.react';
 
 const BotAvatar = () => (
   <svg
@@ -291,17 +292,22 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
           <DialogHeader>
             <DialogTitle>Share Inquiry</DialogTitle>
             <DialogDescription>
-              Anyone with this link can view this inquiry.
+              Anyone with this link can view this inquiry. Scan the QR code or copy the link.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <Input id="link" value={appUrl} readOnly className="flex-1" />
-            <Button type="button" size="icon" onClick={handleCopyLink}>
-              <Copy className="h-4 w-4" />
-              <span className="sr-only">Copy Link</span>
-            </Button>
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="p-4 border rounded-md">
+                <QRCode value={appUrl} size={160} />
+            </div>
+            <div className="flex items-center space-x-2 w-full">
+                <Input id="link" value={appUrl} readOnly className="flex-1" />
+                <Button type="button" size="icon" onClick={handleCopyLink}>
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy Link</span>
+                </Button>
+            </div>
           </div>
-          <DialogFooter className="sm:justify-start">
+          <DialogFooter className="sm:justify-start mt-4">
             <Button type="button" variant="secondary" onClick={() => setShareDialogOpen(false)}>
               Close
             </Button>
