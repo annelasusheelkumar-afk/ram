@@ -34,12 +34,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   if (isUserLoading) {
     return (
       <div className="flex h-screen w-full bg-background">
-        <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
-          <div className="p-2"><Skeleton className="h-8 w-3/4" /></div>
-          <div className="p-2"><Skeleton className="h-8 w-full" /></div>
-          <div className="p-2"><Skeleton className="h-8 w-full" /></div>
-          <div className="p-2"><Skeleton className="h-8 w-full" /></div>
-        </div>
         <div className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
             <Skeleton className="h-9 w-9 rounded-full" />
@@ -62,6 +56,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex h-svh">
+        {/* AppSidebar is now only for the mobile sheet view */}
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <NotificationPermissionManager />

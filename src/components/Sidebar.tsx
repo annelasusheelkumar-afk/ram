@@ -64,7 +64,9 @@ export default function AppSidebar() {
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   return (
-    <Sidebar>
+    // This Sidebar is now only used for the mobile sheet/drawer view.
+    // The AppLayout has been updated to remove the persistent desktop sidebar.
+    <Sidebar collapsible="offcanvas">
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <Logo className="w-7 h-7" />
