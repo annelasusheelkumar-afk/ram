@@ -12,11 +12,11 @@ const WelcomeAnimation = () => {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-64 h-64">
+    <div className="relative flex flex-col items-center justify-center">
       <style jsx>{`
         @keyframes slide-in {
           0% {
-            transform: translateY(100%);
+            transform: translateY(150%);
             opacity: 0;
           }
           50% {
@@ -54,7 +54,16 @@ const WelcomeAnimation = () => {
 
       <div
         className={cn(
-          'absolute bottom-0 transition-transform duration-1000',
+            'speech-bubble mb-4 bg-primary text-primary-foreground text-center p-3 rounded-lg shadow-lg relative after:content-[\'\'] after:absolute after:left-1/2 after:top-[100%] after:-translate-x-1/2 after:border-[10px] after:border-b-0 after:border-t-primary after:border-transparent',
+            isAnimating ? 'speech-bubble' : 'opacity-0'
+        )}
+        >
+        <p className="font-headline font-semibold">Welcome to ServAI!</p>
+      </div>
+
+      <div
+        className={cn(
+          'transition-transform duration-1000',
           isAnimating ? 'robot-container' : 'translate-y-full opacity-0'
         )}
       >
@@ -94,15 +103,6 @@ const WelcomeAnimation = () => {
           {/* Wheels/Treads */}
           <rect x="25" y="80" width="50" height="10" rx="3" fill="hsl(var(--muted-foreground))" />
         </svg>
-      </div>
-
-      <div
-        className={cn(
-          'speech-bubble absolute -top-8 -right-20 bg-primary text-primary-foreground text-center p-3 rounded-lg shadow-lg transition-opacity duration-500 after:content-[\'\'] after:absolute after:left-1/2 after:bottom-[-10px] after:-translate-x-1/2 after:border-[10px] after:border-t-primary after:border-transparent',
-          isAnimating ? 'speech-bubble' : 'opacity-0'
-        )}
-      >
-        <p className="font-headline font-semibold">Welcome!</p>
       </div>
     </div>
   );
