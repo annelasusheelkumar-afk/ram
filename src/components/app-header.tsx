@@ -42,9 +42,7 @@ export default function AppHeader() {
       text: 'Check out ServAI, an AI-driven customer service solution!',
       url: window.location.origin,
     };
-
-    // The Web Share API must be triggered by a user gesture.
-    // We check for its availability first.
+  
     if (navigator.share) {
       try {
         await navigator.share(shareData);
@@ -53,6 +51,11 @@ export default function AppHeader() {
         // We'll only log real errors, not cancellations.
         if (error instanceof Error && error.name !== 'AbortError') {
           console.error('Error sharing app:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Failed to Share',
+            description: 'Could not share the app link.',
+          });
         }
       }
     } else {
