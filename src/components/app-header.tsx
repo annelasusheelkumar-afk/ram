@@ -36,17 +36,22 @@ export default function AppHeader() {
     }
   };
   
+  // A robust share handler that works across devices and handles errors.
   const handleShareApp = async () => {
     const shareData = {
       title: 'ServAI',
       text: 'Check out ServAI, an AI-driven customer service solution!',
+      // window.location.origin provides the base URL (e.g., https://yourapp.com)
+      // This will be the public, shareable link when the app is deployed.
       url: window.location.origin,
     };
 
     try {
+      // Use the modern Web Share API if available (mobile devices)
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
+        // Fallback to copying the link to the clipboard (desktop browsers)
         await navigator.clipboard.writeText(shareData.url);
         toast({
           title: 'Link Copied!',
@@ -54,7 +59,7 @@ export default function AppHeader() {
         });
       }
     } catch (error) {
-      // Ignore abort errors from the user cancelling the share dialog
+      // Ignore AbortError which occurs if the user cancels the share dialog
       if (error instanceof Error && error.name === 'AbortError') {
         return;
       }
