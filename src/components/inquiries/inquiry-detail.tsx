@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateResponseToCustomerInquiry } from '@/ai/flows/generate-response-to-customer-inquiry';
 import { resolveCustomerInquiry } from '@/ai/flows/resolve-customer-inquiry';
@@ -23,6 +23,7 @@ import type { Inquiry, Message } from '@/lib/types';
 import { CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 const BotAvatar = () => (
   <svg
@@ -51,6 +52,8 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   const [isBotReplying, setIsBotReplying] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showSparkles, setShowSparkles] = useState(false);
+  const { toast } = useToast();
+
 
   const inquiryRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'inquiries', inquiryId) : null),
@@ -88,6 +91,39 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
       });
     }
   }, [messages, isBotReplying]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `ServAI Inquiry: ${inquiry?.title}`,
+      text: `Check out this customer inquiry: ${inquiry?.title}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: 'Link Copied!',
+          description: 'The inquiry link has been copied to your clipboard.',
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to Copy',
+          description: 'Could not copy the link to your clipboard.',
+        });
+      }
+    }
+  };
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,25 +197,31 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   return (
     <div className="flex flex-col h-full">
       <CardHeader className="border-b">
-         <div className='flex items-center gap-2 sm:gap-4'>
-            <Button asChild variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7">
-                <Link href="/inquiries"><ArrowLeft/></Link>
-            </Button>
-            <div>
-                <CardTitle className="font-headline text-lg sm:text-2xl">{inquiry?.title}</CardTitle>
-                <div className="flex items-center gap-2 mt-1 relative">
-                    <Badge
-                        variant={
-                        inquiry?.status === 'resolved' || inquiry?.status === 'closed'
-                            ? 'outline'
-                            : 'secondary'
-                        }
-                    >
-                        {inquiry?.status}
-                    </Badge>
-                     {showSparkles && <div className="sparkle-container"><div className="sparkle" /></div>}
+         <div className='flex items-center justify-between gap-2 sm:gap-4'>
+            <div className='flex items-center gap-2 sm:gap-4'>
+                <Button asChild variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7">
+                    <Link href="/inquiries"><ArrowLeft/></Link>
+                </Button>
+                <div>
+                    <CardTitle className="font-headline text-lg sm:text-2xl">{inquiry?.title}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1 relative">
+                        <Badge
+                            variant={
+                            inquiry?.status === 'resolved' || inquiry?.status === 'closed'
+                                ? 'outline'
+                                : 'secondary'
+                            }
+                        >
+                            {inquiry?.status}
+                        </Badge>
+                        {showSparkles && <div className="sparkle-container"><div className="sparkle" /></div>}
+                    </div>
                 </div>
             </div>
+            <Button variant="ghost" size="icon" onClick={handleShare}>
+                <Share2 className="h-5 w-5" />
+                <span className="sr-only">Share Inquiry</span>
+            </Button>
          </div>
       </CardHeader>
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
