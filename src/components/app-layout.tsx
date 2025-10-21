@@ -26,7 +26,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Render auth pages without the main app layout.
   if (isAuthPage) {
-    return <>{children}</>;
+    return <main className="h-svh">{children}</main>;
   }
   
   // While checking for the user, show a full-page loading skeleton.
@@ -61,12 +61,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   // Once the user is confirmed, render the full application layout.
   return (
     <SidebarProvider>
-      <div className="flex h-full min-h-screen">
+      <div className="flex h-svh">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex flex-1 flex-col">
           <NotificationPermissionManager />
           <AppHeader />
-          <main className="h-[calc(100vh-3.5rem)] overflow-y-auto">
+          <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
