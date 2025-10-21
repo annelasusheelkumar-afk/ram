@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, ArrowLeft, Share2 } from 'lucide-react';
+import { Send, ArrowLeft, Share2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateResponseToCustomerInquiry } from '@/ai/flows/generate-response-to-customer-inquiry';
 import { resolveCustomerInquiry } from '@/ai/flows/resolve-customer-inquiry';
@@ -24,6 +24,14 @@ import { CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const BotAvatar = () => (
   <svg
@@ -53,7 +61,13 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showSparkles, setShowSparkles] = useState(false);
   const { toast } = useToast();
+  const [isShareDialogOpen, setShareDialogOpen] = useState(false);
+  const [appUrl, setAppUrl] = useState('');
 
+  useEffect(() => {
+    // Ensure window.location is accessed only on the client side
+    setAppUrl(window.location.href);
+  }, []);
 
   const inquiryRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'inquiries', inquiryId) : null),
@@ -92,35 +106,19 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
     }
   }, [messages, isBotReplying]);
 
-  const handleShare = async () => {
-    const shareData = {
-      title: `ServAI Inquiry: ${inquiry?.title}`,
-      text: `Check out this customer inquiry: ${inquiry?.title}`,
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    } else {
-      // Fallback for browsers that don't support the Web Share API
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: 'Link Copied!',
-          description: 'The inquiry link has been copied to your clipboard.',
-        });
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to Copy',
-          description: 'Could not copy the link to your clipboard.',
-        });
-      }
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(appUrl);
+      toast({
+        title: '📋 Link Copied!',
+        description: 'The inquiry link has been copied to your clipboard.',
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: '❌ Failed to Copy',
+        description: 'Could not copy the link. Please copy it manually.',
+      });
     }
   };
 
@@ -218,7 +216,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
                     </div>
                 </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleShare}>
+            <Button variant="ghost" size="icon" onClick={() => setShareDialogOpen(true)}>
                 <Share2 className="h-5 w-5" />
                 <span className="sr-only">Share Inquiry</span>
             </Button>
@@ -287,6 +285,29 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
           </Button>
         </form>
       </div>
+
+       <Dialog open={isShareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Inquiry</DialogTitle>
+            <DialogDescription>
+              Anyone with this link can view this inquiry.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <Input id="link" value={appUrl} readOnly className="flex-1" />
+            <Button type="button" size="icon" onClick={handleCopyLink}>
+              <Copy className="h-4 w-4" />
+              <span className="sr-only">Copy Link</span>
+            </Button>
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <Button type="button" variant="secondary" onClick={() => setShareDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
