@@ -8,15 +8,29 @@ import {
   User,
 } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
-import { doc, setDoc } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
+import { doc, setDoc, getFirestore } from 'firebase/firestore';
 
 const handleNewUser = (user: User) => {
+    // We need to get the firestore instance from the user's app instance.
     const firestore = getFirestore(user.app);
+    // Create a reference to the user's document in the 'users' collection.
     const userRef = doc(firestore, 'users', user.uid);
     // Assign 'admin' role if the email matches, otherwise 'user'
     const role = user.email === 'ceo@example.com' ? 'admin' : 'user';
-    setDoc(userRef, { email: user.email, role: role }, { merge: true });
+
+    // Create a profile object. For anonymous users, email will be null.
+    const userProfile = {
+      email: user.email,
+      role: user.isAnonymous ? 'user' : role, // Anonymous users are always 'user'
+    };
+
+    // Use setDoc with merge:true to create the document if it doesn't exist,
+    // or update it if it does. This handles both new sign-ups and first-time
+    // logins for existing auth users who might not have a profile document.
+    setDoc(userRef, userProfile, { merge: true }).catch(error => {
+        // This is a background operation, but we should still log errors.
+        console.error("Failed to create/update user profile:", error);
+    });
 }
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -68,6 +82,7 @@ export function initiateEmailSignIn(
   onFailure?: () => void
 ): void {
   signInWithEmailAndPassword(authInstance, email, password)
+    .then(userCredential => handleNewUser(userCredential.user)) // Also handle profile on sign-in
     .catch(error => {
       console.error('Email sign-in failed:', error);
       

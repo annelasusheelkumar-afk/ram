@@ -1,36 +1,90 @@
 'use client';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import Logo from './logo';
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Bot,
+  AreaChart,
+  LogOut,
+} from 'lucide-react';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase/provider';
+import type { UserProfile } from '@/lib/types';
 
-// Dynamically import Skeleton component to ensure it only renders on the client
-const Skeleton = dynamic(() => import('@/components/ui/skeleton').then(mod => mod.Skeleton), { ssr: false });
-
-export default function Sidebar() {
-  const [expanded, setExpanded] = useState(true);
-
-  // Since this component is client-rendered, we can safely use state and effects
-  // without causing hydration errors.
+const NavItem = ({
+  href,
+  icon,
+  label,
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}) => {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+  const Icon = icon;
 
   return (
-    <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
-      <div className="p-2">
-        {/* The Skeleton component will only be rendered on the client side */}
-        <Skeleton className="h-8 w-3/4" />
-      </div>
-       <div className="p-2">
-        <Skeleton className="h-8 w-full" />
-      </div>
-       <div className="p-2">
-        <Skeleton className="h-8 w-full" />
-      </div>
+    <SidebarMenuItem>
+      <Link href={href} passHref legacyBehavior>
+        <SidebarMenuButton isActive={isActive} tooltip={label}>
+          <Icon />
+          <span>{label}</span>
+        </SidebarMenuButton>
+      </Link>
+    </SidebarMenuItem>
+  );
+};
 
-      <button
-        className="mt-auto p-2 bg-muted text-foreground rounded"
-        onClick={() => setExpanded(!expanded)}
-      >
-        {expanded ? 'Collapse' : 'Expand'}
-      </button>
-    </div>
+export default function AppSidebar() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+  return (
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
+          <Logo className="w-7 h-7" />
+          <span className="text-lg font-semibold font-headline">ServAI</span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
+          <NavItem href="/inquiries" icon={MessageSquare} label="Inquiries" />
+          <NavItem href="/chatbot" icon={Bot} label="Chatbot" />
+          {userProfile?.role === 'admin' && (
+             <NavItem href="/admin/sales" icon={AreaChart} label="Sales" />
+          )}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter>
+        {/* Placeholder for footer content */}
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -5,22 +5,33 @@ import { usePathname, useRouter } from 'next/navigation';
 import AppHeader from './app-header';
 import NotificationPermissionManager from './NotificationPermissionManager';
 import { useUser } from '@/firebase';
-import Sidebar from './Sidebar';
+import AppSidebar from './Sidebar';
 import { Skeleton } from './ui/skeleton';
 import { SidebarProvider } from './ui/sidebar';
 
-function AppContent({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  const isAuthPage = ['/login', '/signup', '/forgot-password', '/loading'].includes(pathname);
 
   React.useEffect(() => {
-    if (!isUserLoading && !user) {
+    // If auth is loading, we wait. If it's done and there's no user,
+    // and we're not on an auth page, redirect.
+    if (!isUserLoading && !user && !isAuthPage) {
       router.replace('/login');
     }
-  }, [user, isUserLoading, router, pathname]);
+  }, [user, isUserLoading, router, pathname, isAuthPage]);
 
-  if (isUserLoading || !user) {
+  // Render auth pages without the main app layout.
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+  
+  // While checking for the user, show a full-page loading skeleton.
+  // This avoids layout shifts and hydration errors.
+  if (isUserLoading) {
     return (
       <div className="flex h-screen w-full bg-background">
         <div className="hidden md:flex flex-col gap-4 border-r p-2 bg-sidebar w-64">
@@ -40,11 +51,18 @@ function AppContent({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+  
+  // If we're done loading and there's no user, the useEffect will trigger a redirect.
+  // We render null here to prevent a flash of the main layout.
+  if (!user) {
+    return null;
+  }
 
+  // Once the user is confirmed, render the full application layout.
   return (
     <SidebarProvider>
       <div className="flex h-full min-h-screen">
-        <Sidebar />
+        <AppSidebar />
         <div className="flex-1 flex flex-col">
           <NotificationPermissionManager />
           <AppHeader />
@@ -57,13 +75,4 @@ function AppContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isAuthPage = ['/login', '/signup', '/forgot-password', '/loading'].includes(pathname);
-
-  if (isAuthPage) {
-    return <>{children}</>;
-  }
-
-  return <AppContent>{children}</AppContent>;
-}
+export default AppLayout;
