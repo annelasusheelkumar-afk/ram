@@ -33,8 +33,8 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-1 lg:col-span-4">
           <CardHeader>
             <CardTitle className="font-headline">Response Times</CardTitle>
           </CardHeader>
@@ -42,7 +42,7 @@ export default function DashboardPage() {
             <ResponseTimeChart />
           </CardContent>
         </Card>
-        <Card className="col-span-4 lg:col-span-3">
+        <Card className="col-span-1 lg:col-span-3">
           <CardHeader>
             <CardTitle className="font-headline">Sentiment Analysis</CardTitle>
           </CardHeader>
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         </Card>
       </div>
        <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <CardTitle className="font-headline">Recent Inquiries</CardTitle>
                 <CardDescription>A list of the most recent customer inquiries.</CardDescription>

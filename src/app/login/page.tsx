@@ -75,8 +75,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-full items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm relative overflow-hidden">
+    <div className="flex h-full w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm">
+      <Card className="relative overflow-hidden">
         {showSadBot && <SadBot onAnimationEnd={() => setShowSadBot(false)} />}
         <CardHeader>
           <CardTitle className="text-2xl">Welcome to ServAI</CardTitle>
@@ -125,7 +126,7 @@ export default function LoginPage() {
         <CardFooter className="flex-col gap-4">
            <div className="relative w-full">
             <Separator />
-            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
+            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
               OR
             </span>
           </div>
@@ -145,6 +146,7 @@ export default function LoginPage() {
           </p>
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }

@@ -161,12 +161,12 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   return (
     <div className="flex flex-col h-full">
       <CardHeader className="border-b">
-         <div className='flex items-center gap-4'>
-            <Button asChild variant="ghost" size="icon" className="h-7 w-7">
+         <div className='flex items-center gap-2 sm:gap-4'>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7">
                 <Link href="/inquiries"><ArrowLeft/></Link>
             </Button>
             <div>
-                <CardTitle className="font-headline">{inquiry?.title}</CardTitle>
+                <CardTitle className="font-headline text-lg sm:text-2xl">{inquiry?.title}</CardTitle>
                 <div className="flex items-center gap-2 mt-1 relative">
                     <Badge
                         variant={
@@ -189,29 +189,31 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
               key={message.id}
               className={cn(
                 'flex items-start gap-3',
-                message.userId !== 'bot' ? 'flex-row-reverse' : 'flex-row'
+                message.userId !== 'bot' ? 'justify-end' : 'justify-start'
               )}
             >
-              <Avatar className="h-9 w-9">
-                {message.userId === 'bot' ? (
-                  <BotAvatar />
-                ) : null}
-                <AvatarFallback>
-                  {message.userId !== 'bot' ? (user?.email?.[0].toUpperCase() || 'U') : 'S'}
-                </AvatarFallback>
-              </Avatar>
-              <div
-                className={cn(
-                  'max-w-md rounded-lg p-3 text-sm whitespace-pre-wrap',
-                  message.userId !== 'bot'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                )}
-              >
-                <p>{message.message}</p>
-                 {message.timestamp && <p className="mt-1 text-xs text-muted-foreground/80">
-                  {new Date(message.timestamp.seconds * 1000).toLocaleTimeString()}
-                </p>}
+              <div className={cn('flex items-start gap-3', message.userId !== 'bot' ? 'flex-row-reverse' : 'flex-row')}>
+                <Avatar className="h-9 w-9">
+                  {message.userId === 'bot' ? (
+                    <BotAvatar />
+                  ) : null}
+                  <AvatarFallback>
+                    {message.userId !== 'bot' ? (user?.email?.[0].toUpperCase() || 'U') : 'S'}
+                  </AvatarFallback>
+                </Avatar>
+                <div
+                  className={cn(
+                    'max-w-sm md:max-w-md rounded-lg p-3 text-sm whitespace-pre-wrap',
+                    message.userId !== 'bot'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  )}
+                >
+                  <p>{message.message}</p>
+                  {message.timestamp && <p className="mt-1 text-xs text-muted-foreground/80">
+                    {new Date(message.timestamp.seconds * 1000).toLocaleTimeString()}
+                  </p>}
+                </div>
               </div>
             </div>
           ))}
@@ -228,8 +230,8 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
           )}
         </div>
       </ScrollArea>
-      <div className="border-t p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+      <div className="border-t p-2 sm:p-4">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-2xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
