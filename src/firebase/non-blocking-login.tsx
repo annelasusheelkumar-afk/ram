@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -38,12 +37,16 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
   signInAnonymously(authInstance)
     .then(userCredential => handleNewUser(userCredential.user))
     .catch(error => {
-    console.error('Anonymous sign-in failed:', error);
-    toast({
-      variant: 'destructive',
-      title: 'Sign-in failed',
-      description: 'Could not sign in as guest. Please try again.',
-    });
+      console.error('Anonymous sign-in failed:', error);
+      let description = 'Could not sign in as guest. Please try again.';
+      if (error.code === 'auth/operation-not-allowed') {
+        description = 'Anonymous sign-in is not enabled. Please enable it in your Firebase project settings.';
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: description,
+      });
   });
 }
 
