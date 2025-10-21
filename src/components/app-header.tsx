@@ -42,38 +42,29 @@ export default function AppHeader() {
       text: 'Check out ServAI, an AI-driven customer service solution!',
       url: window.location.origin,
     };
-  
-    if (navigator.share) {
-      try {
+
+    try {
+      if (navigator.share) {
         await navigator.share(shareData);
-      } catch (error) {
-        // The user might cancel the share action, which can throw an AbortError.
-        // We'll only log real errors, not cancellations.
-        if (error instanceof Error && error.name !== 'AbortError') {
-          console.error('Error sharing app:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Failed to Share',
-            description: 'Could not share the app link.',
-          });
-        }
-      }
-    } else {
-      // Fallback for desktop browsers that don't support the Web Share API.
-      try {
+      } else {
         await navigator.clipboard.writeText(shareData.url);
         toast({
           title: 'Link Copied!',
           description: 'The app link has been copied to your clipboard.',
         });
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to Copy',
-          description: 'Could not copy the app link to your clipboard.',
-        });
       }
+    } catch (error) {
+      // Ignore abort errors from the user cancelling the share dialog
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      
+      console.error('Error sharing app:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to Share',
+        description: 'Could not share the app link. Please try again.',
+      });
     }
   };
 
