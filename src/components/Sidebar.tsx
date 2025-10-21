@@ -10,18 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import Logo from './logo';
 import {
   LayoutDashboard,
   MessageSquare,
   Bot,
   AreaChart,
-  LogOut,
 } from 'lucide-react';
 import { useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -43,12 +38,16 @@ const NavItem = ({
 
   return (
     <SidebarMenuItem>
-      <Link href={href} passHref legacyBehavior>
-        <SidebarMenuButton isActive={isActive} tooltip={label}>
-          <Icon />
-          <span>{label}</span>
-        </SidebarMenuButton>
-      </Link>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={label}
+      >
+        <Link href={href}>
+            <Icon />
+            <span>{label}</span>
+        </Link>
+      </SidebarMenuButton>
     </SidebarMenuItem>
   );
 };
