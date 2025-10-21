@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateChatbotResponse } from '@/ai/flows/generate-chatbot-response';
+import { speechToText } from '@/ai/flows/speech-to-text';
 import { useUser } from '@/firebase';
-import { Send } from 'lucide-react';
+import { Send, Mic, StopCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   text: string;
@@ -44,6 +46,12 @@ export default function ChatPanel() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast();
+
 
   useEffect(() => {
     // Set initial message on client-side to avoid hydration mismatch
@@ -91,6 +99,60 @@ export default function ChatPanel() {
       setIsLoading(false);
     }
   };
+
+  const handleMicClick = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result as string;
+          setIsLoading(true);
+          try {
+            const { text } = await speechToText({ audioDataUri: base64Audio });
+            setInput(text);
+          } catch (error) {
+            console.error('Error in speech-to-text:', error);
+            toast({
+              variant: 'destructive',
+              title: 'Speech Recognition Error',
+              description: 'Could not understand audio. Please try again.',
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        // Clean up the stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Access Denied',
+        description: 'Please enable microphone permissions in your browser settings.',
+      });
+    }
+  };
+
 
   return (
     <div className="flex flex-col h-full">
@@ -147,11 +209,15 @@ export default function ChatPanel() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
+            placeholder="Type a message or use the mic..."
             autoComplete="off"
-            disabled={isLoading}
+            disabled={isLoading || isRecording}
           />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+           <Button type="button" size="icon" onClick={handleMicClick} variant={isRecording ? 'destructive' : 'ghost'} disabled={isLoading}>
+            {isRecording ? <StopCircle /> : <Mic />}
+            <span className="sr-only">{isRecording ? 'Stop recording' : 'Start recording'}</span>
+          </Button>
+          <Button type="submit" size="icon" disabled={isLoading || !input.trim() || isRecording}>
             <Send />
             <span className="sr-only">Send</span>
           </Button>
