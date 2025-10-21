@@ -193,9 +193,11 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
               )}
             >
               <Avatar className="h-9 w-9">
-                {message.userId === 'bot' && <BotAvatar />}
+                {message.userId === 'bot' ? (
+                  <BotAvatar />
+                ) : null}
                 <AvatarFallback>
-                  {message.userId !== 'bot' ? (user?.email?.[0].toUpperCase() || 'U') : 'R'}
+                  {message.userId !== 'bot' ? (user?.email?.[0].toUpperCase() || 'U') : 'S'}
                 </AvatarFallback>
               </Avatar>
               <div
@@ -217,7 +219,7 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
             <div className="flex items-start gap-3 flex-row">
               <Avatar className="h-9 w-9">
                 <BotAvatar />
-                <AvatarFallback>R</AvatarFallback>
+                <AvatarFallback>S</AvatarFallback>
               </Avatar>
               <div className="max-w-xs rounded-lg p-3 text-sm bg-muted">
                 <p>Thinking...</p>
