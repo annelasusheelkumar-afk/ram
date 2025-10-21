@@ -17,23 +17,24 @@ interface Message {
 }
 
 const BotAvatar = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-full w-full text-primary"
-    >
-      <path d="M12 8V4H8" />
-      <rect width="16" height="12" x="4" y="8" rx="2" />
-      <path d="M2 14h2" />
-      <path d="M20 14h2" />
-      <path d="M15 13v2" />
-      <path d="M9 13v2" />
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-full w-full text-primary"
+  >
+    <path d="M12 8V4H8" />
+    <rect width="16" height="12" x="4" y="8" rx="4" />
+    <path d="M2 14h2" />
+    <path d="M20 14h2" />
+    <path d="M15 13v2" />
+    <path d="M9 13v2" />
+    <path d="M9 18h6" />
+  </svg>
 );
 
 
@@ -110,7 +111,7 @@ export default function ChatPanel() {
                   <BotAvatar />
                 )}
                 <AvatarFallback>
-                  {message.isUser ? (user?.email?.[0].toUpperCase() || 'U') : 'R'}
+                  {message.isUser ? (user?.email?.[0].toUpperCase() || 'U') : 'S'}
                 </AvatarFallback>
               </Avatar>
               <div
@@ -132,7 +133,7 @@ export default function ChatPanel() {
              <div className="flex items-start gap-3 flex-row">
                 <Avatar className="h-9 w-9">
                   <BotAvatar />
-                  <AvatarFallback>R</AvatarFallback>
+                  <AvatarFallback>S</AvatarFallback>
                 </Avatar>
                 <div className="max-w-xs rounded-lg p-3 text-sm bg-muted">
                     <p>Thinking...</p>
