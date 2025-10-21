@@ -39,7 +39,7 @@ const speechToTextFlow = ai.defineFlow(
   },
   async (input) => {
     const { text } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-grounded-tts-aqa-preview',
+      model: 'googleai/gemini-2.5-flash-preview',
       prompt: [{ media: { url: input.audioDataUri } }],
     });
     return { text: text };
