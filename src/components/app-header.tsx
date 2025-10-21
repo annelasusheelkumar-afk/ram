@@ -16,11 +16,14 @@ import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useFirestore } from '@/firebase/provider';
+import { useToast } from '@/hooks/use-toast';
+import { Share2 } from 'lucide-react';
 
 
 export default function AppHeader() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
@@ -32,6 +35,39 @@ export default function AppHeader() {
       // Optionally, show a toast notification on error
     }
   };
+  
+  const handleShareApp = async () => {
+    const shareData = {
+      title: 'ServAI',
+      text: 'Check out ServAI, an AI-driven customer service solution!',
+      url: window.location.origin,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.error('Error sharing app:', error);
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: 'Link Copied!',
+          description: 'The app link has been copied to your clipboard.',
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to Copy',
+          description: 'Could not copy the app link to your clipboard.',
+        });
+      }
+    }
+  };
+
 
   if (isUserLoading) {
     return (
@@ -60,6 +96,10 @@ export default function AppHeader() {
             <DropdownMenuLabel>{user.isAnonymous ? 'Guest User' : user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleShareApp}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share App
+            </DropdownMenuItem>
             <DropdownMenuItem>Support</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
