@@ -44,8 +44,19 @@ export default function AppHeader() {
     };
 
     // The Web Share API must be triggered by a user gesture.
-    // We handle it here directly. The fallback is for desktop.
-    if (!navigator.share) {
+    // We check for its availability first.
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // The user might cancel the share action, which can throw an AbortError.
+        // We'll only log real errors, not cancellations.
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error sharing app:', error);
+        }
+      }
+    } else {
+      // Fallback for desktop browsers that don't support the Web Share API.
       try {
         await navigator.clipboard.writeText(shareData.url);
         toast({
@@ -59,17 +70,6 @@ export default function AppHeader() {
           title: 'Failed to Copy',
           description: 'Could not copy the app link to your clipboard.',
         });
-      }
-      return;
-    }
-
-    try {
-      await navigator.share(shareData);
-    } catch (error) {
-      // The user might cancel the share action, which can throw an error.
-      // We'll only log real errors, not cancellations.
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Error sharing app:', error);
       }
     }
   };
