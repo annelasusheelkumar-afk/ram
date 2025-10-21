@@ -23,6 +23,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { setPersistence, browserSessionPersistence } from 'firebase/auth';
 import SadBot from '@/components/sad-bot';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGuestLoading, setIsGuestLoading] = useState(false);
   const [showSadBot, setShowSadBot] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // If the user is successfully authenticated (and not loading), redirect them.
@@ -48,7 +50,11 @@ export default function LoginPage() {
 
   const handleLoginFailure = () => {
     setShowSadBot(true);
-    // Also stop the loading spinner
+    toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+    });
     setIsLoading(false);
   };
 
