@@ -75,7 +75,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-background p-4">
+    <div className="flex h-full items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
       <Card className="relative overflow-hidden">
         {showSadBot && <SadBot onAnimationEnd={() => setShowSadBot(false)} />}

@@ -57,7 +57,7 @@ export default function DashboardPage() {
                 <CardTitle className="font-headline">Recent Inquiries</CardTitle>
                 <CardDescription>A list of the most recent customer inquiries.</CardDescription>
             </div>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
                 <Link href="/inquiries">View All</Link>
             </Button>
         </CardHeader>
