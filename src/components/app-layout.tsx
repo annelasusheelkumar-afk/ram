@@ -7,7 +7,7 @@ import NotificationPermissionManager from './NotificationPermissionManager';
 import { useUser } from '@/firebase';
 import AppSidebar from './Sidebar';
 import { Skeleton } from './ui/skeleton';
-import { SidebarProvider } from './ui/sidebar';
+import { SidebarProvider, SidebarInset } from './ui/sidebar';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,7 +30,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   // While checking for the user, show a full-page loading skeleton.
-  // This avoids layout shifts and hydration errors.
   if (isUserLoading) {
     return (
       <div className="flex h-screen w-full bg-background">
@@ -55,8 +54,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   // Once the user is confirmed, render the full application layout.
   return (
     <SidebarProvider>
-      <div className="flex h-svh">
-        {/* AppSidebar is now only for the mobile sheet view */}
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <NotificationPermissionManager />
@@ -65,7 +62,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
-      </div>
     </SidebarProvider>
   );
 }

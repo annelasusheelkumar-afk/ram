@@ -11,27 +11,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MoreVertical, LayoutDashboard, MessageSquare, Bot, AreaChart } from 'lucide-react';
 import { useFirestore } from '@/firebase/provider';
-import { doc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
 
 
 export default function AppHeader() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const firestore = useFirestore();
-
-  const userProfileRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const handleLogout = async () => {
     try {
@@ -47,41 +36,15 @@ export default function AppHeader() {
   if (isUserLoading) {
     return (
         <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:justify-end">
-            <SidebarTrigger className="sm:hidden" />
+            <SidebarTrigger />
         </header>
     );
   }
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
-      <SidebarTrigger className="sm:hidden" />
+      <SidebarTrigger />
       <div className="flex items-center gap-2 sm:ml-auto">
-      <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-                <MoreVertical />
-                <span className="sr-only">Open navigation</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/dashboard"><LayoutDashboard className="mr-2" />Dashboard</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-                <Link href="/inquiries"><MessageSquare className="mr-2" />Inquiries</Link>
-            </DropdownMenuItem>
-             <DropdownMenuItem asChild>
-                <Link href="/chatbot"><Bot className="mr-2" />Chatbot</Link>
-            </DropdownMenuItem>
-             {userProfile?.role === 'admin' && (
-                <DropdownMenuItem asChild>
-                    <Link href="/admin/sales"><AreaChart className="mr-2" />Sales</Link>
-                </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
 
       {user ? (
         <DropdownMenu>
