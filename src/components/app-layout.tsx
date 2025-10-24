@@ -7,7 +7,7 @@ import NotificationPermissionManager from './NotificationPermissionManager';
 import { useUser } from '@/firebase';
 import AppSidebar from './Sidebar';
 import { Skeleton } from './ui/skeleton';
-import { SidebarProvider } from './ui/sidebar';
+import { SidebarProvider, SidebarInset } from './ui/sidebar';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,40 +30,28 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   if (isAuthPage) {
     return <main className="h-svh">{children}</main>;
   }
-  
-  // While checking for the user on a protected page, show a full-page loading skeleton.
-  if (isUserLoading && !isPublicPage) {
-    return (
-      <div className="flex h-screen w-full bg-background">
-        <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b bg-background px-4">
-            <Skeleton className="h-9 w-9 rounded-full" />
-          </header>
-          <main className="flex-1 p-8">
-            <Skeleton className="h-96 w-full" />
-          </main>
-        </div>
-      </div>
-    );
-  }
-  
-  // If we're on a protected page, done loading, and there's no user, the useEffect will trigger a redirect.
-  // We render null here to prevent a flash of the main layout.
-  if (!user && !isPublicPage) {
-    return null;
-  }
 
-  // Once the user is confirmed (or if it's a public page), render the full application layout.
+  // For both public and protected pages, show the main layout structure immediately.
+  // The content inside will be responsible for its own loading state.
   return (
     <SidebarProvider>
-        <AppSidebar />
-        <div className="flex flex-1 flex-col">
-          {user && <NotificationPermissionManager />}
-          <AppHeader />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+      <AppSidebar />
+      <div className="flex flex-1 flex-col">
+        {user && <NotificationPermissionManager />}
+        <AppHeader />
+        <main className="flex-1 overflow-y-auto">
+          {isUserLoading && !isPublicPage ? (
+            // Show a skeleton for the main content of protected pages while user is loading
+             <div className="p-4 md:p-8">
+                <Skeleton className="h-96 w-full" />
+             </div>
+          ) : (
+             // Once loading is complete, or for public pages, render the children.
+             // If !user and not public, the useEffect hook will redirect.
+             (user || isPublicPage) ? children : null
+          )}
+        </main>
+      </div>
     </SidebarProvider>
   );
 }
