@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'ServAI',
   description: 'AI-driven customer service solution',
   icons: { icon: '/icon.svg' },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
