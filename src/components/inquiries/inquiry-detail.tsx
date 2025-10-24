@@ -67,8 +67,9 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
 
   useEffect(() => {
     // Ensure window.location is accessed only on the client side
-    setAppUrl(window.location.href);
-  }, []);
+    // Construct a clean URL for sharing
+    setAppUrl(`${window.location.origin}/inquiries/${inquiryId}`);
+  }, [inquiryId]);
 
   const inquiryRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'inquiries', inquiryId) : null),
