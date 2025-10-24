@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, MessageCircle, Smile, Clock, List } from 'lucide-react';
+import { DollarSign, MessageCircle, Smile, Clock, List, Zap, ShieldCheck } from 'lucide-react';
 import SentimentChart from '@/components/dashboard/sentiment-chart';
 import ResponseTimeChart from '@/components/dashboard/response-time-chart';
 import RecentInquiriesTable from '@/components/dashboard/recent-inquiries-table';
+import RecurringIssues from '@/components/dashboard/recurring-issues';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -51,6 +52,49 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-primary" />
+                    Predictive Issue Detection
+                </CardTitle>
+                <CardDescription>
+                    AI-powered analysis of recent inquiries to flag recurring user problems.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <RecurringIssues />
+            </CardContent>
+        </Card>
+        <div className="space-y-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg">CRM Integration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        Ready to connect with enterprise systems like Salesforce and Zoho to sync customer data and streamline workflows.
+                    </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg flex items-center gap-2">
+                         <ShieldCheck className="h-5 w-5 text-positive" />
+                         Data Privacy & Security
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        Built on Firebase with end-to-end encryption and robust security rules. We are committed to GDPR and CCPA compliance, ensuring your data is always protected.
+                    </p>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
+
        <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
