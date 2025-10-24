@@ -63,13 +63,10 @@ export default function InquiryDetail({ inquiryId }: { inquiryId: string }) {
   const [showSparkles, setShowSparkles] = useState(false);
   const { toast } = useToast();
   const [isShareDialogOpen, setShareDialogOpen] = useState(false);
-  const [appUrl, setAppUrl] = useState('');
 
-  useEffect(() => {
-    // Ensure window.location is accessed only on the client side
-    // Construct a clean URL for sharing
-    setAppUrl(`${window.location.origin}/inquiries/${inquiryId}`);
-  }, [inquiryId]);
+  // This will only be accessed on the client where `window` is available
+  const appUrl = typeof window !== 'undefined' ? `${window.location.origin}/inquiries/${inquiryId}` : '';
+
 
   const inquiryRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'inquiries', inquiryId) : null),

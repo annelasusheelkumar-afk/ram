@@ -34,12 +34,10 @@ export default function AppHeader() {
   const router = useRouter();
   const { toast } = useToast();
   const [isShareDialogOpen, setShareDialogOpen] = React.useState(false);
-  const [appUrl, setAppUrl] = React.useState('');
+  
+  // This will only be accessed on the client where `window` is available
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
-  React.useEffect(() => {
-    // Ensure window.location is accessed only on the client side
-    setAppUrl(window.location.origin);
-  }, []);
 
   const handleLogout = async () => {
     try {
