@@ -109,7 +109,7 @@ export default function ChatPanel() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -118,25 +118,23 @@ export default function ChatPanel() {
 
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result as string;
-          setIsLoading(true);
-          try {
-            const { text } = await speechToText({ audioDataUri: base64Audio });
-            setInput(text);
-          } catch (error) {
-            console.error('Error in speech-to-text:', error);
-            toast({
-              variant: 'destructive',
-              title: 'Speech Recognition Error',
-              description: 'Could not understand audio. Please try again.',
-            });
-          } finally {
-            setIsLoading(false);
-          }
-        };
+        const audioBuffer = Buffer.from(await audioBlob.arrayBuffer());
+
+        setIsLoading(true);
+        try {
+          const { text } = await speechToText({ audio: audioBuffer });
+          setInput(text);
+        } catch (error) {
+          console.error('Error in speech-to-text:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Speech Recognition Error',
+            description: 'Could not understand audio. Please try again.',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        
         // Clean up the stream
         stream.getTracks().forEach(track => track.stop());
       };

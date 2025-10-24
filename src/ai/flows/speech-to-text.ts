@@ -10,13 +10,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import ffmpeg from 'fluent-ffmpeg';
 
 const SpeechToTextInputSchema = z.object({
-  audioDataUri: z
-    .string()
-    .describe(
-      "A chunk of audio, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
+  audio: z.instanceof(Buffer),
 });
 export type SpeechToTextInput = z.infer<typeof SpeechToTextInputSchema>;
 
@@ -31,6 +31,30 @@ export async function speechToText(
   return speechToTextFlow(input);
 }
 
+// Helper function to convert webm to wav
+async function convertWebmToWav(webmBuffer: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const tempInputPath = path.join(os.tmpdir(), `input-${Date.now()}.webm`);
+    const tempOutputPath = path.join(os.tmpdir(), `output-${Date.now()}.wav`);
+
+    fs.writeFile(tempInputPath, webmBuffer, (err) => {
+      if (err) return reject(err);
+
+      ffmpeg(tempInputPath)
+        .toFormat('wav')
+        .on('error', (err) => {
+          fs.unlink(tempInputPath, () => {}); // Clean up input file
+          reject(err);
+        })
+        .on('end', () => {
+          fs.unlink(tempInputPath, () => {}); // Clean up input file
+          resolve(tempOutputPath);
+        })
+        .save(tempOutputPath);
+    });
+  });
+}
+
 const speechToTextFlow = ai.defineFlow(
   {
     name: 'speechToTextFlow',
@@ -38,10 +62,16 @@ const speechToTextFlow = ai.defineFlow(
     outputSchema: SpeechToTextOutputSchema,
   },
   async (input) => {
+    const wavPath = await convertWebmToWav(input.audio);
+    const audioDataUri = `data:audio/wav;base64,${fs.readFileSync(wavPath, 'base64')}`;
+    
+    // Clean up the generated wav file
+    fs.unlink(wavPath, () => {});
+
     const { text } = await ai.generate({
       model: 'gemini-1.5-flash-latest',
-      prompt: [{ media: { url: input.audioDataUri } }],
+      prompt: [{ media: { url: audioDataUri, contentType: 'audio/wav' } }],
     });
-    return { text: text };
+    return { text };
   }
 );
