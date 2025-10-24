@@ -118,22 +118,28 @@ export default function ChatPanel() {
 
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioBuffer = Buffer.from(await audioBlob.arrayBuffer());
+        
+        // Convert Blob to a Base64 data URI string
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64data = reader.result as string;
 
-        setIsLoading(true);
-        try {
-          const { text } = await speechToText({ audio: audioBuffer });
-          setInput(text);
-        } catch (error) {
-          console.error('Error in speech-to-text:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Speech Recognition Error',
-            description: 'Could not understand audio. Please try again.',
-          });
-        } finally {
-          setIsLoading(false);
-        }
+          setIsLoading(true);
+          try {
+            const { text } = await speechToText({ audioDataUri: base64data });
+            setInput(text);
+          } catch (error) {
+            console.error('Error in speech-to-text:', error);
+            toast({
+              variant: 'destructive',
+              title: 'Speech Recognition Error',
+              description: 'Could not understand audio. Please try again.',
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        };
         
         // Clean up the stream
         stream.getTracks().forEach(track => track.stop());
