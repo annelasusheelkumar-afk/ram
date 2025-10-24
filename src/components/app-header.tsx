@@ -109,7 +109,7 @@ export default function AppHeader() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShareDialogOpen(true)}>
+                <DropdownMenuItem onSelect={() => setShareDialogOpen(true)}>
                   <Share2 className="mr-2 h-4 w-4" />
                   Share App
                 </DropdownMenuItem>

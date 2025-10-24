@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/qrcode.react": "^1.0.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/wav": "^1.0.2",
