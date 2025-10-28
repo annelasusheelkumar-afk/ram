@@ -1,1 +1,15 @@
+import { NextResponse } from 'next/server';
 
+export async function POST(req: Request) {
+  try {
+    const { message } = await req.json();
+
+    // Simple AI response simulation
+    const reply = You said: ${message}. I'm Serve AI — how can I assist further?;
+
+    return NextResponse.json({ reply });
+  } catch (error) {
+    console.error('Error in chatbot API:', error);
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+  }
+}
