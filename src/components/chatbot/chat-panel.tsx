@@ -13,7 +13,7 @@ export default function ChatPanel() {
     setInput('');
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
