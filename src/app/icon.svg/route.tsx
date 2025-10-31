@@ -1,32 +1,36 @@
-import { ImageResponse } from 'next/og';
+import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const runtime = 'edge';
+// ✅ POST handler for /api/chat
+export async function POST(req: Request) {
+  try {
+    const { message } = await req.json();
 
-export function GET() {
-  return new ImageResponse(
-    (
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M18.4111 11.233C19.3333 10.0445 19.3333 8.35552 18.4111 7.16699C17.4889 5.97846 15.7333 5.97846 14.8111 7.16699L9.6 13.5999V19.9999H16L18.4111 11.233Z"
-          fill="#3F51B5"
-          fillOpacity="0.7"
-        />
-        <path
-          d="M13.5889 20.7669C12.6667 21.9554 12.6667 23.6444 13.5889 24.833C14.5111 26.0215 16.2667 26.0215 17.1889 24.833L22.4 18.3999V11.9999H16L13.5889 20.7669Z"
-          fill="#3F51B5"
-        />
-      </svg>
-    ),
-    {
-      width: 32,
-      height: 32,
+    // 1️⃣ Check API key
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("❌ Gemini API key is missing!");
+      return NextResponse.json(
+        { reply: "Server error: Gemini API key missing." },
+        { status: 500 }
+      );
     }
-  );
-}
 
+    // 2️⃣ Create model instance
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // 3️⃣ Generate response
+    const result = await model.generateContent(message);
+    const reply = result.response.text();
+
+    // 4️⃣ Send back Gemini’s text
+    return NextResponse.json({ reply });
+  } catch (error: any) {
+    console.error("❌ Gemini API error:", error);
+    return NextResponse.json(
+      { reply: "Error connecting to Gemini API." },
+      { status: 500 }
+    );
+  }
+}
